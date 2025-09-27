@@ -65,7 +65,6 @@ export default function Header({ user }: HeaderProps) {
           {user && !isOnEditorPage && (
             <nav className="flex items-center space-x-1">
               <Button variant={isOnPlansPage ? 'secondary' : 'ghost'} size="sm" asChild>
-                <Link to="/plans">Plans</Link>
               </Button>
             </nav>
           )}
