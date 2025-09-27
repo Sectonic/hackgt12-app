@@ -12,10 +12,38 @@ export async function POST(req: NextRequest) {
     console.log('Floor Plan Assistant received:', prompt);
 
     // Get OpenAI API key from environment
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
     
-    if (!OPENAI_API_KEY) {
-      throw new Error('OpenAI API key not configured');
+    if (!OPENAI_API_KEY || OPENAI_API_KEY === 'sk-your-openai-api-key-here') {
+      // Return a helpful error message instead of throwing
+      const errorMessage = `🔑 **API Key Required**
+
+I need a valid OpenAI API key to provide AI assistance. Please:
+
+1. **Get an API key** from [OpenAI Platform](https://platform.openai.com/api-keys)
+2. **Add it to your environment** by updating the \`OPENAI_API_KEY\` in your \`.env\` file
+3. **Restart the server** to apply the changes
+
+**Current status**: No valid API key found.
+
+*For development, you can also set \`NEXT_PUBLIC_OPENAI_API_KEY\` in your environment variables.*`;
+
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode(`data: ${errorMessage}\n\n`));
+          controller.enqueue(encoder.encode(`event: done\ndata: \n\n`));
+          controller.close();
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+        },
+      });
     }
 
     // Create a readable stream for SSE format
@@ -103,7 +131,40 @@ Always respond with detailed, actionable advice formatted in clear markdown. Use
 
         } catch (error) {
           console.error('Streaming error:', error);
-          const errorMessage = `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+          let errorMessage = 'Sorry, I encountered an error.';
+          
+          if (error instanceof Error) {
+            if (error.message.includes('401')) {
+              errorMessage = `🔑 **Authentication Error**
+
+Your OpenAI API key appears to be invalid or expired. Please:
+
+1. **Check your API key** at [OpenAI Platform](https://platform.openai.com/api-keys)
+2. **Verify the key** is correctly set in your environment
+3. **Ensure you have credits** in your OpenAI account
+
+**Error**: ${error.message}`;
+            } else if (error.message.includes('429')) {
+              errorMessage = `⏱️ **Rate Limit Exceeded**
+
+You've hit the OpenAI API rate limit. Please:
+
+1. **Wait a moment** and try again
+2. **Check your usage** at [OpenAI Platform](https://platform.openai.com/usage)
+3. **Consider upgrading** your plan if needed
+
+**Error**: ${error.message}`;
+            } else {
+              errorMessage = `❌ **API Error**
+
+I encountered an issue with the OpenAI API:
+
+**Error**: ${error.message}
+
+Please check your API key and try again.`;
+            }
+          }
+          
           controller.enqueue(encoder.encode(`data: ${errorMessage}\n\n`));
           controller.enqueue(encoder.encode(`event: done\ndata: \n\n`));
           controller.close();
