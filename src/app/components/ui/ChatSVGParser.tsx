@@ -117,8 +117,26 @@ export default function ChatSVGParser() {
 
       setMessages(prev => [...prev, userMessage]);
 
-      // Auto-analyze the file
-      await analyzeFile(fileType, content, file.name);
+      // Add assistant message asking for specific analysis request
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'assistant',
+        content: `✅ **File uploaded successfully!**
+
+I've received your ${fileType.toUpperCase()} file: **${file.name}**
+
+Now, please tell me what specific analysis you'd like me to perform on this floor plan. For example:
+• "Analyze the rooms and calculate the total area"
+• "Find all the doors and windows"
+• "Identify the room types and their sizes"
+• "Check for any architectural issues"
+• "Convert this to a different format"
+
+What would you like me to focus on?`,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
 
     } catch (error) {
       toast({
@@ -379,9 +397,249 @@ Return only valid JSON.`;
     }
   };
 
+  const callOpenAIWithQuestion = async (fileType: string, content: string, userQuestion: string): Promise<any> => {
+    if (!isApiKeyConfigured) {
+      throw new Error('OpenAI API key is required for LLM analysis. Please set NEXT_PUBLIC_OPENAI_API_KEY environment variable.');
+    }
+
+    try {
+      let prompt: string;
+      let messages: any[];
+
+      if (fileType === 'image') {
+        prompt = `You are an expert architect analyzing a floor plan image. The user has asked: "${userQuestion}"
+
+Please analyze the uploaded image and provide a focused response to their question. Extract relevant information about:
+
+1. Room information (names, types, areas, levels) - Identify all enclosed spaces
+2. Opening information (doors, windows, dimensions) - Locate all passages and openings
+3. Create visual annotations for better recognition:
+   - Add text labels for rooms that don't have them
+   - Mark door and window positions with clear labels
+   - Add area measurements where missing
+   - Highlight room boundaries and connections
+4. Validation issues (self-intersections, connectivity problems)
+
+IMPORTANT: Focus your analysis on answering the user's specific question: "${userQuestion}"
+
+Please return a JSON response with this structure:
+{
+  "rooms": [
+    {
+      "id": "room-1",
+      "name": "Kitchen",
+      "type": "kitchen",
+      "level": "1",
+      "area": 15.5
+    }
+  ],
+  "openings": [
+    {
+      "id": "opening-1",
+      "type": "door",
+      "width": 0.9,
+      "height": 2.1
+    }
+  ],
+  "annotations": [
+    {
+      "id": "text-1",
+      "text": "Kitchen",
+      "position": {"x": 100, "y": 150},
+      "type": "room_label"
+    },
+    {
+      "id": "area-1", 
+      "text": "15.5 m²",
+      "position": {"x": 120, "y": 170},
+      "type": "area_measurement"
+    },
+    {
+      "id": "door-1",
+      "text": "Door 0.9m",
+      "position": {"x": 200, "y": 100},
+      "type": "opening_label"
+    }
+  ],
+  "metadata": {
+    "totalArea": 62.7,
+    "roomCount": 4,
+    "sourceType": "${fileType}"
+  }
+}
+
+Focus on identifying room boundaries, doors, windows, and any visible text labels. Return only valid JSON.`;
+
+        messages = [
+          {
+            role: 'system',
+            content: 'You are an expert architect specializing in floor plan analysis and annotation. Your goal is to create comprehensive visual annotations that make floor plans easier to understand and analyze. Focus on identifying rooms, openings, and creating clear labels and measurements. Always return valid JSON.'
+          },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              { type: 'image_url', image_url: { url: content } }
+            ]
+          }
+        ];
+      } else {
+        prompt = `You are an expert architect analyzing a floor plan ${fileType.toUpperCase()} file. The user has asked: "${userQuestion}"
+
+Please analyze the content and provide a focused response to their question. Extract relevant information about:
+
+1. Room information (names, types, areas, levels) - Identify all enclosed spaces
+2. Opening information (doors, windows, dimensions) - Locate all passages and openings
+3. Create comprehensive annotations for better recognition:
+   - Add text labels for rooms that don't have them
+   - Mark door and window positions with clear labels
+   - Add area measurements where missing
+   - Highlight room boundaries and connections
+4. Validation issues (self-intersections, connectivity problems)
+
+IMPORTANT: Focus your analysis on answering the user's specific question: "${userQuestion}"
+
+Content:
+\`\`\`${fileType}
+${fileType === 'json' ? JSON.stringify(JSON.parse(content), null, 2) : content}
+\`\`\`
+
+Please return a JSON response with this structure:
+{
+  "rooms": [
+    {
+      "id": "room-1",
+      "name": "Kitchen",
+      "type": "kitchen",
+      "level": "1",
+      "area": 15.5
+    }
+  ],
+  "openings": [
+    {
+      "id": "opening-1",
+      "type": "door",
+      "width": 0.9,
+      "height": 2.1
+    }
+  ],
+  "annotations": [
+    {
+      "id": "text-1",
+      "text": "Kitchen",
+      "position": {"x": 100, "y": 150},
+      "type": "room_label"
+    },
+    {
+      "id": "area-1", 
+      "text": "15.5 m²",
+      "position": {"x": 120, "y": 170},
+      "type": "area_measurement"
+    },
+    {
+      "id": "door-1",
+      "text": "Door 0.9m",
+      "position": {"x": 200, "y": 100},
+      "type": "opening_label"
+    }
+  ],
+  "metadata": {
+    "totalArea": 62.7,
+    "roomCount": 4,
+    "sourceType": "${fileType}"
+  }
+}
+
+Return only valid JSON.`;
+
+        messages = [
+          {
+            role: 'system',
+            content: 'You are an expert architect specializing in floor plan analysis and annotation. Your goal is to create comprehensive visual annotations that make floor plans easier to understand and analyze. Focus on identifying rooms, openings, and creating clear labels and measurements. Always return valid JSON.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ];
+      }
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o', // Use GPT-4o for better image analysis
+          messages,
+          temperature: 0.1,
+          max_tokens: 3000
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const content_text = data.choices[0].message.content;
+
+      // Extract JSON from response
+      const jsonMatch = content_text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in OpenAI response');
+      }
+
+      return JSON.parse(jsonMatch[0]);
+
+    } catch (error) {
+      console.error('OpenAI API call failed:', error);
+      throw new Error(`LLM analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const analyzeFileWithQuestion = async (fileType: 'svg' | 'image' | 'json', content: string, fileName: string, userQuestion: string) => {
+    setIsProcessing(true);
+
+    try {
+      // Call OpenAI API with both file content and user question
+      const analysisResult = await callOpenAIWithQuestion(fileType, content, userQuestion);
+
+      const assistantMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: 'assistant',
+        content: `🔍 **Analysis Complete!**
+
+I've analyzed your ${fileType.toUpperCase()} file based on your question: *"${userQuestion}"*
+
+Here's what I found:`,
+        fileType,
+        fileName,
+        analysisResult,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+
+    } catch (error) {
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: 'assistant',
+        content: `❌ **Analysis Failed**
+
+Sorry, I encountered an error while analyzing your file. Please try uploading a different file or check if the file format is supported.`,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() && !uploadedFile) return;
+    if (!inputMessage.trim()) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -391,18 +649,24 @@ Return only valid JSON.`;
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputMessage;
     setInputMessage('');
 
-    // Simulate AI response
-    setTimeout(() => {
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: "I understand your question! Feel free to upload a floor plan file and I'll analyze it for you. I can help with:\n\n• **Room identification** and classification\n• **Door and window detection**\n• **Area calculations**\n• **Architectural insights**\n• **File format conversion**",
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-    }, 1000);
+    // If there's an uploaded file, analyze it with the user's question
+    if (uploadedFile) {
+      await analyzeFileWithQuestion(uploadedFile.type, uploadedFile.content, uploadedFile.file.name, currentInput);
+    } else {
+      // No file uploaded, provide general help
+      setTimeout(() => {
+        const assistantMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: "I understand your question! Please upload a floor plan file first, and then I'll analyze it based on your specific request. I can help with:\n\n• **Room identification** and classification\n• **Door and window detection**\n• **Area calculations**\n• **Architectural insights**\n• **File format conversion**",
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+      }, 1000);
+    }
   };
 
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
