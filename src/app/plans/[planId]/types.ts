@@ -15,3 +15,15 @@ export interface PlacedItem extends Omit<Item, 'file'> {
   x: number;
   y: number;
 }
+
+export interface WallItem {
+  id: string;
+  type: 'wall';
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  thickness: number;
+}
+
+export type PlacedEntity = PlacedItem | WallItem;
