@@ -1,0 +1,120 @@
+<svg width="265" height="185" viewBox="0 0 265 185" fill="none" xmlns="http://www.w3.org/2000/svg">
+<mask id="path-1-inside-1_404_2070" fill="white">
+<path d="M0 0H90V185H0V0Z"/>
+</mask>
+<path d="M0 0H90V185H0V0Z" fill="#D9BEA3"/>
+<path d="M0 0V-1H-1V0H0ZM0 185H-1V186H0V185ZM0 1H90V-1H0V1ZM90 184H0V186H90V184ZM1 185V0H-1V185H1Z" fill="#2E3D4D" mask="url(#path-1-inside-1_404_2070)"/>
+<g clip-path="url(#clip0_404_2070)">
+<mask id="path-3-inside-2_404_2070" fill="white">
+<path d="M90 95H265V185H90V95Z"/>
+</mask>
+<path d="M90 95H265V185H90V95Z" fill="#D9BEA3"/>
+<mask id="path-5-inside-3_404_2070" fill="white">
+<path d="M90 95H115V185H90V95Z"/>
+</mask>
+<path d="M90 95H115V185H90V95Z" fill="#D9BEA3"/>
+<path d="M91 185V95H89V185H91Z" fill="#2E3D4D" mask="url(#path-5-inside-3_404_2070)"/>
+<mask id="path-7-inside-4_404_2070" fill="white">
+<path d="M115 95H140V185H115V95Z"/>
+</mask>
+<path d="M115 95H140V185H115V95Z" fill="#D9BEA3"/>
+<path d="M116 185V95H114V185H116Z" fill="#2E3D4D" mask="url(#path-7-inside-4_404_2070)"/>
+<mask id="path-9-inside-5_404_2070" fill="white">
+<path d="M140 95H165V185H140V95Z"/>
+</mask>
+<path d="M140 95H165V185H140V95Z" fill="#D9BEA3"/>
+<path d="M141 185V95H139V185H141Z" fill="#2E3D4D" mask="url(#path-9-inside-5_404_2070)"/>
+<mask id="path-11-inside-6_404_2070" fill="white">
+<path d="M165 95H190V185H165V95Z"/>
+</mask>
+<path d="M165 95H190V185H165V95Z" fill="#D9BEA3"/>
+<path d="M166 185V95H164V185H166Z" fill="#2E3D4D" mask="url(#path-11-inside-6_404_2070)"/>
+<mask id="path-13-inside-7_404_2070" fill="white">
+<path d="M190 95H215V185H190V95Z"/>
+</mask>
+<path d="M190 95H215V185H190V95Z" fill="#D9BEA3"/>
+<path d="M191 185V95H189V185H191Z" fill="#2E3D4D" mask="url(#path-13-inside-7_404_2070)"/>
+<mask id="path-15-inside-8_404_2070" fill="white">
+<path d="M215 95H240V185H215V95Z"/>
+</mask>
+<path d="M215 95H240V185H215V95Z" fill="#D9BEA3"/>
+<path d="M216 185V95H214V185H216Z" fill="#2E3D4D" mask="url(#path-15-inside-8_404_2070)"/>
+<mask id="path-17-inside-9_404_2070" fill="white">
+<path d="M240 95H265V185H240V95Z"/>
+</mask>
+<path d="M240 95H265V185H240V95Z" fill="#D9BEA3"/>
+<path d="M241 185V95H239V185H241Z" fill="#2E3D4D" mask="url(#path-17-inside-9_404_2070)"/>
+</g>
+<path d="M265 95H266V94H265V95ZM265 185V186H266V185H265ZM90 96H265V94H90V96ZM264 95V185H266V95H264ZM265 184H90V186H265V184Z" fill="#2E3D4D" mask="url(#path-3-inside-2_404_2070)"/>
+<mask id="path-19-inside-10_404_2070" fill="white">
+<path d="M90 90H265V95H90V90Z"/>
+</mask>
+<path d="M90 90H265V95H90V90Z" fill="#805A53"/>
+<path d="M90 90V89H89V90H90ZM265 90H266V89H265V90ZM265 95V96H266V95H265ZM90 95H89V96H90V95ZM90 91H265V89H90V91ZM264 90V95H266V90H264ZM265 94H90V96H265V94ZM91 95V90H89V95H91Z" fill="#2E3D4D" mask="url(#path-19-inside-10_404_2070)"/>
+<g clip-path="url(#clip1_404_2070)">
+<mask id="path-21-inside-11_404_2070" fill="white">
+<path d="M90 0H265V90H90V0Z"/>
+</mask>
+<path d="M90 0H265V90H90V0Z" fill="#D9BEA3"/>
+<mask id="path-23-inside-12_404_2070" fill="white">
+<path d="M90 0H115V90H90V0Z"/>
+</mask>
+<path d="M90 0H115V90H90V0Z" fill="#D9BEA3"/>
+<path d="M91 90V0H89V90H91Z" fill="#2E3D4D" mask="url(#path-23-inside-12_404_2070)"/>
+<mask id="path-25-inside-13_404_2070" fill="white">
+<path d="M115 0H140V90H115V0Z"/>
+</mask>
+<path d="M115 0H140V90H115V0Z" fill="#D9BEA3"/>
+<path d="M116 90V0H114V90H116Z" fill="#2E3D4D" mask="url(#path-25-inside-13_404_2070)"/>
+<mask id="path-27-inside-14_404_2070" fill="white">
+<path d="M140 0H165V90H140V0Z"/>
+</mask>
+<path d="M140 0H165V90H140V0Z" fill="#D9BEA3"/>
+<path d="M141 90V0H139V90H141Z" fill="#2E3D4D" mask="url(#path-27-inside-14_404_2070)"/>
+<mask id="path-29-inside-15_404_2070" fill="white">
+<path d="M165 0H190V90H165V0Z"/>
+</mask>
+<path d="M165 0H190V90H165V0Z" fill="#D9BEA3"/>
+<path d="M166 90V0H164V90H166Z" fill="#2E3D4D" mask="url(#path-29-inside-15_404_2070)"/>
+<mask id="path-31-inside-16_404_2070" fill="white">
+<path d="M190 0H215V90H190V0Z"/>
+</mask>
+<path d="M190 0H215V90H190V0Z" fill="#D9BEA3"/>
+<path d="M191 90V0H189V90H191Z" fill="#2E3D4D" mask="url(#path-31-inside-16_404_2070)"/>
+<mask id="path-33-inside-17_404_2070" fill="white">
+<path d="M215 0H240V90H215V0Z"/>
+</mask>
+<path d="M215 0H240V90H215V0Z" fill="#D9BEA3"/>
+<path d="M216 90V0H214V90H216Z" fill="#2E3D4D" mask="url(#path-33-inside-17_404_2070)"/>
+<mask id="path-35-inside-18_404_2070" fill="white">
+<path d="M240 0H265V90H240V0Z"/>
+</mask>
+<path d="M240 0H265V90H240V0Z" fill="#D9BEA3"/>
+<path d="M241 90V0H239V90H241Z" fill="#2E3D4D" mask="url(#path-35-inside-18_404_2070)"/>
+<path d="M90 90H265V70L90 90Z" fill="black" fill-opacity="0.1"/>
+</g>
+<path d="M265 0H266V-1H265V0ZM265 90V91H266V90H265ZM90 1H265V-1H90V1ZM264 0V90H266V0H264ZM265 89H90V91H265V89Z" fill="#2E3D4D" mask="url(#path-21-inside-11_404_2070)"/>
+<path d="M240 95H244V185H240V95Z" fill="black" fill-opacity="0.1"/>
+<path d="M215 95H219V185H215V95Z" fill="black" fill-opacity="0.1"/>
+<path d="M190 95H194V185H190V95Z" fill="black" fill-opacity="0.1"/>
+<path d="M165 95H169V185H165V95Z" fill="black" fill-opacity="0.1"/>
+<path d="M140 95H144V185H140V95Z" fill="black" fill-opacity="0.1"/>
+<path d="M115 95H119V185H115V95Z" fill="black" fill-opacity="0.1"/>
+<path d="M90 95H94V185H90V95Z" fill="black" fill-opacity="0.1"/>
+<path d="M262 0H265V90H262V0Z" fill="black" fill-opacity="0.1"/>
+<path d="M237 0H240V90H237V0Z" fill="black" fill-opacity="0.1"/>
+<path d="M212 0H215V90H212V0Z" fill="black" fill-opacity="0.1"/>
+<path d="M187 0H190V90H187V0Z" fill="black" fill-opacity="0.1"/>
+<path d="M162 0H165V90H162V0Z" fill="black" fill-opacity="0.1"/>
+<path d="M137 0H140V90H137V0Z" fill="black" fill-opacity="0.1"/>
+<path d="M112 0H115V90H112V0Z" fill="black" fill-opacity="0.1"/>
+<path d="M265 45L260 42.1132V47.8868L265 45ZM260.5 44.5H65V45.5H260.5V44.5ZM44.5 65V119H45.5V65H44.5ZM65 139.5H265V138.5H65V139.5ZM44.5 119C44.5 130.322 53.6782 139.5 65 139.5V138.5C54.2304 138.5 45.5 129.77 45.5 119H44.5ZM65 44.5C53.6782 44.5 44.5 53.6782 44.5 65H45.5C45.5 54.2304 54.2304 45.5 65 45.5V44.5Z" fill="#CC5C52"/>
+<defs>
+<clipPath id="clip0_404_2070">
+<path d="M90 95H265V185H90V95Z" fill="white"/>
+</clipPath>
+<clipPath id="clip1_404_2070">
+<path d="M90 0H265V90H90V0Z" fill="white"/>
+</clipPath>
+</defs>
+</svg>

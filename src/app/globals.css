@@ -120,3 +120,27 @@
     @apply bg-background text-foreground;
   }
 }
+
+.grid-background {
+  background-image: 
+    radial-gradient(circle, #00000035 1px, transparent 1px);
+  background-size: var(--grid-size, 35px) var(--grid-size, 35px);
+  background-position: 0 0;
+}
+
+.furniture-menu-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.furniture-menu-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.furniture-menu-scroll::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 3px;
+}
+
+.furniture-menu-scroll::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
