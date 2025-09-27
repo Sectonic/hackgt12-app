@@ -2,6 +2,31 @@ import { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+interface FloorPlanTask {
+  id: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  completed?: boolean;
+}
+
+interface FloorPlanPhase {
+  phase: string;
+  description: string;
+  tasks: FloorPlanTask[];
+}
+
+interface FloorPlanResponse {
+  floorPlanType: string;
+  requirements: {
+    rooms: string[];
+    dimensions: string;
+    specialRequirements: string[];
+  };
+  phases: FloorPlanPhase[];
+  estimatedTimeframe: string;
+  nextSteps: string[];
+}
+
 // Mock Floor Plan Assistant API
 export async function POST(req: NextRequest) {
   try {
@@ -10,9 +35,8 @@ export async function POST(req: NextRequest) {
 
     console.log('Floor Plan Assistant received:', prompt);
 
-    // Simple pattern matching for demo
     const message = prompt.toLowerCase();
-    let response = '';
+    let response: FloorPlanResponse;
 
     if (
       message.includes('apartment') ||
@@ -22,99 +46,194 @@ export async function POST(req: NextRequest) {
       message.includes('office') ||
       message.includes('room')
     ) {
-      response = `I understand you want to create a floor plan! Based on your request, I can help you plan this space.
+      // Determine space type and requirements
+      const spaceType = getSpaceType(message);
+      const rooms = extractRooms(message);
+      const specialRequirements = extractSpecialRequirements(message);
 
-## Floor Plan Creation Tasks
-
-### Phase 1: Structure & Boundaries
-1. Define overall layout and dimensions
-2. Establish exterior walls and main structural elements  
-3. Plan entry point and main circulation path
-
-### Phase 2: Room Definition
-1. Layout primary rooms with proper proportions
-2. Design functional spaces (bathroom, kitchen, etc.)
-3. Plan work areas and activity zones
-4. Define living/social spaces for comfort
-
-### Phase 3: Access & Circulation
-1. Position doors between rooms for optimal flow
-2. Ensure privacy and accessibility where needed
-3. Plan connections between functional areas
-4. Create clear pathways throughout
-
-### Phase 4: Furniture & Fixtures
-1. Place essential furniture and equipment
-2. Install necessary fixtures and appliances
-3. Add storage solutions and built-ins
-4. Arrange spaces for intended use
-
-### Phase 5: Final Details
-1. Add windows for natural light and ventilation
-2. Include electrical and lighting plans
-3. Label all rooms and key features
-4. Review and optimize overall layout
-
-**JSON Structure for Implementation:**
-\`\`\`json
-{
-  "floorPlanType": "residential space",
-  "requirements": {
-    "rooms": ["bedroom", "bathroom", "kitchen", "living area"],
-    "dimensions": "efficient use of available space",
-    "specialRequirements": ["good flow between areas", "natural light", "privacy"]
-  },
-  "todoList": [
-    {
-      "phase": "Structure & Boundaries", 
-      "tasks": [
-        {"id": "struct-01", "description": "Define overall layout", "priority": "high"},
-        {"id": "struct-02", "description": "Establish exterior walls", "priority": "high"}
-      ]
-    },
-    {
-      "phase": "Room Definition",
-      "tasks": [
-        {"id": "room-01", "description": "Layout primary rooms", "priority": "high"},
-        {"id": "room-02", "description": "Design functional spaces", "priority": "high"}
-      ]
-    }
-  ]
-}
-\`\`\``;
+      response = {
+        floorPlanType: spaceType,
+        requirements: {
+          rooms: rooms,
+          dimensions: 'Efficient use of available space with proper proportions',
+          specialRequirements: specialRequirements,
+        },
+        phases: [
+          {
+            phase: 'Planning & Analysis',
+            description: 'Initial assessment and requirement gathering',
+            tasks: [
+              {
+                id: 'plan-01',
+                description: 'Analyze space requirements and constraints',
+                priority: 'high',
+              },
+              {
+                id: 'plan-02',
+                description: 'Create initial layout sketches and concepts',
+                priority: 'high',
+              },
+              {
+                id: 'plan-03',
+                description: 'Define traffic flow patterns and circulation',
+                priority: 'medium',
+              },
+            ],
+          },
+          {
+            phase: 'Structure & Boundaries',
+            description: 'Establish the foundation and structural elements',
+            tasks: [
+              {
+                id: 'struct-01',
+                description: 'Define overall dimensions and boundary walls',
+                priority: 'high',
+              },
+              {
+                id: 'struct-02',
+                description: 'Establish load-bearing walls and structural elements',
+                priority: 'high',
+              },
+              {
+                id: 'struct-03',
+                description: 'Plan main entry points and emergency exits',
+                priority: 'high',
+              },
+            ],
+          },
+          {
+            phase: 'Room Layout & Zoning',
+            description: 'Design individual spaces and their relationships',
+            tasks: [
+              {
+                id: 'room-01',
+                description: 'Layout primary living/working spaces',
+                priority: 'high',
+              },
+              {
+                id: 'room-02',
+                description: 'Design functional areas (kitchen, bathroom, etc.)',
+                priority: 'high',
+              },
+              {
+                id: 'room-03',
+                description: 'Plan storage and utility spaces',
+                priority: 'medium',
+              },
+              {
+                id: 'room-04',
+                description: 'Optimize room proportions and relationships',
+                priority: 'medium',
+              },
+            ],
+          },
+          {
+            phase: 'Systems & Infrastructure',
+            description: 'Plan utilities, lighting, and building systems',
+            tasks: [
+              {
+                id: 'sys-01',
+                description: 'Design electrical layout and outlet placement',
+                priority: 'high',
+              },
+              {
+                id: 'sys-02',
+                description: 'Plan plumbing routes and fixture locations',
+                priority: 'high',
+              },
+              {
+                id: 'sys-03',
+                description: 'Design HVAC system and ventilation',
+                priority: 'medium',
+              },
+              {
+                id: 'sys-04',
+                description: 'Plan lighting scheme and natural light optimization',
+                priority: 'medium',
+              },
+            ],
+          },
+          {
+            phase: 'Finalization & Documentation',
+            description: 'Complete the design and create final documentation',
+            tasks: [
+              {
+                id: 'final-01',
+                description: 'Add furniture layout and space planning',
+                priority: 'medium',
+              },
+              {
+                id: 'final-02',
+                description: 'Create detailed floor plan drawings',
+                priority: 'high',
+              },
+              {
+                id: 'final-03',
+                description: 'Generate specifications and material lists',
+                priority: 'low',
+              },
+              {
+                id: 'final-04',
+                description: 'Review and validate against requirements',
+                priority: 'high',
+              },
+            ],
+          },
+        ],
+        estimatedTimeframe: '2-4 weeks depending on complexity',
+        nextSteps: [
+          'Begin with planning and analysis phase',
+          'Gather detailed space requirements and measurements',
+          'Create initial concept sketches for review',
+        ],
+      };
     } else {
-      response = `Hello! I'm your Floor Plan Planning Assistant. I'd love to help you create a structured plan for your floor plan.
-
-To get started, could you tell me:
-- What type of space are you planning? (residential home, apartment, office, etc.)
-- What rooms or areas do you need?
-- Do you have any size constraints or special requirements?
-
-Once I understand your needs, I'll create a detailed todo list that breaks down the implementation into clear, manageable tasks!`;
+      // Welcome message for new users
+      response = {
+        floorPlanType: 'consultation',
+        requirements: {
+          rooms: [],
+          dimensions: 'To be determined',
+          specialRequirements: [],
+        },
+        phases: [],
+        estimatedTimeframe: 'Consultation phase',
+        nextSteps: [
+          "Describe the type of space you're planning (home, apartment, office, etc.)",
+          'List the rooms or areas you need',
+          'Share any size constraints or special requirements',
+          'Mention your timeline and budget considerations',
+        ],
+      };
     }
+
+    // Create formatted text output
+    const formattedResponse = formatFloorPlanResponse(response);
 
     // Create a readable stream for SSE format
     const encoder = new TextEncoder();
 
     const stream = new ReadableStream({
       start(controller) {
-        // Stream characters for better spacing preservation
-        let charIndex = 0;
-        const chars = response.split('');
+        // Split by words instead of characters for better readability
+        const words = formattedResponse.split(' ');
+        let wordIndex = 0;
 
         const interval = setInterval(() => {
-          if (charIndex < chars.length) {
-            // Send multiple characters at once for better performance
-            const chunkSize = 3;
-            const chunk = chars.slice(charIndex, charIndex + chunkSize).join('');
-            controller.enqueue(encoder.encode(`data: ${chunk}\n\n`));
-            charIndex += chunkSize;
+          if (wordIndex < words.length) {
+            // Send 2-4 words at a time for natural flow
+            const wordsPerChunk = Math.min(3, words.length - wordIndex);
+            const chunk = words.slice(wordIndex, wordIndex + wordsPerChunk).join(' ');
+            const chunkWithSpace = wordIndex + wordsPerChunk < words.length ? chunk + ' ' : chunk;
+
+            controller.enqueue(encoder.encode(`data: ${chunkWithSpace}\n\n`));
+            wordIndex += wordsPerChunk;
           } else {
             controller.enqueue(encoder.encode(`event: done\ndata: \n\n`));
             controller.close();
             clearInterval(interval);
           }
-        }, 25); // Stream every 25ms for smooth typing effect
+        }, 50); // Slightly slower for better readability
       },
     });
 
@@ -132,4 +251,109 @@ Once I understand your needs, I'll create a detailed todo list that breaks down 
       { status: 500, headers: { 'Content-Type': 'application/json' } },
     );
   }
+}
+
+function getSpaceType(message: string): string {
+  if (message.includes('apartment')) return 'Residential Apartment';
+  if (message.includes('house')) return 'Residential House';
+  if (message.includes('office')) return 'Commercial Office';
+  if (message.includes('studio')) return 'Studio Space';
+  return 'Custom Space';
+}
+
+function extractRooms(message: string): string[] {
+  const rooms: string[] = [];
+  const roomKeywords = [
+    'bedroom',
+    'bathroom',
+    'kitchen',
+    'living room',
+    'dining room',
+    'office',
+    'study',
+    'laundry',
+    'garage',
+    'basement',
+    'attic',
+  ];
+
+  roomKeywords.forEach((room) => {
+    if (message.includes(room)) {
+      rooms.push(room.charAt(0).toUpperCase() + room.slice(1));
+    }
+  });
+
+  return rooms.length > 0 ? rooms : ['To be determined'];
+}
+
+function extractSpecialRequirements(message: string): string[] {
+  const requirements: string[] = [];
+
+  if (message.includes('accessible') || message.includes('wheelchair')) {
+    requirements.push('Accessibility compliance');
+  }
+  if (message.includes('pet')) {
+    requirements.push('Pet-friendly design');
+  }
+  if (message.includes('natural light')) {
+    requirements.push('Natural light optimization');
+  }
+  if (message.includes('storage')) {
+    requirements.push('Ample storage solutions');
+  }
+  if (message.includes('open')) {
+    requirements.push('Open floor plan concept');
+  }
+
+  return requirements.length > 0 ? requirements : ['Standard residential requirements'];
+}
+
+function formatFloorPlanResponse(response: FloorPlanResponse): string {
+  let formatted = '';
+
+  if (response.floorPlanType === 'consultation') {
+    formatted = `# Floor Plan Planning Assistant
+
+Welcome! I'm here to help you create a comprehensive floor plan. 
+
+## Getting Started
+
+To provide you with a detailed planning roadmap, I need to understand your project better:
+
+### Please Share:
+${response.nextSteps.map((step) => `• ${step}`).join('\n')}
+
+Once you provide these details, I'll create a structured implementation plan with clear phases and actionable tasks!`;
+  } else {
+    formatted = `# Floor Plan Development Plan
+
+## Project Overview
+**Space Type:** ${response.floorPlanType}
+**Estimated Timeline:** ${response.estimatedTimeframe}
+
+## Requirements Summary
+**Rooms Needed:** ${response.requirements.rooms.join(', ')}
+**Dimensions:** ${response.requirements.dimensions}
+**Special Requirements:** ${response.requirements.specialRequirements.join(', ')}
+
+## Implementation Phases
+
+${response.phases
+  .map(
+    (phase, index) => `### Phase ${index + 1}: ${phase.phase}
+*${phase.description}*
+
+${phase.tasks.map((task) => `**${task.priority.toUpperCase()} PRIORITY** - ${task.description} \`[${task.id}]\``).join('\n')}
+`,
+  )
+  .join('\n')}
+
+## Next Steps
+${response.nextSteps.map((step) => `1. ${step}`).join('\n')}
+
+---
+*This plan can be customized based on your specific needs and constraints.*`;
+  }
+
+  return formatted;
 }
