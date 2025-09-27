@@ -9,7 +9,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from '@/app/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import Header from '@/app/components/Header';
-import Home from '@/app/pages/Home';
 import Auth from '@/app/pages/Auth';
 import Plans from '@/app/pages/Plans';
 import Editor from '@/app/pages/Editor';
@@ -56,7 +55,10 @@ export default function HomePage() {
           <div className="min-h-screen bg-background">
             <Header user={user} />
             <Routes>
-              <Route path="/" element={<Home user={user} />} />
+              <Route
+                path="/"
+                element={user ? <Navigate to="/plans" replace /> : <Navigate to="/auth" replace />}
+              />
               <Route path="/auth" element={user ? <Navigate to="/plans" replace /> : <Auth />} />
               <Route
                 path="/plans"

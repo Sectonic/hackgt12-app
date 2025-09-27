@@ -149,12 +149,7 @@ export default function Home({ user }: HomeProps) {
     <div className="container mx-auto px-6 py-8">
       <div className="flex flex-col space-y-8">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Welcome back!</h1>
-            <p className="text-muted-foreground">Continue working on your floor plan projects</p>
-          </div>
         </div>
-
         {/* Quick Actions - Wall-style Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <Card className="wall-card group cursor-pointer">
