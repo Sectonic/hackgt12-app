@@ -48,6 +48,7 @@ export default function Header({ user }: HeaderProps) {
   const isOnPlansPage = pathname?.startsWith('/plans');
   const isOnEditorPage = pathname?.includes('/editor');
   const isOnSVGParserPage = pathname?.includes('/svg-parser');
+  const isOnChatTestPage = pathname?.includes('/chat-test');
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md supports-backdrop-blur:bg-background/80 shadow-sm">
@@ -80,11 +81,11 @@ export default function Header({ user }: HeaderProps) {
             </nav>
           )}
           {user && !isOnEditorPage && (
-            <nav className="flex items-center space-x-1">
+            <nav className="flex items-center space-x-4">
               <Button variant={isOnSVGParserPage ? 'secondary' : 'ghost'} size="sm" asChild>
                 <Link href="/svg-parser">SVG Parser</Link>
               </Button>
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant={isOnChatTestPage ? 'secondary' : 'default'} size="sm" asChild>
                 <Link href="/chat-test">Chat Test</Link>
               </Button>
             </nav>
