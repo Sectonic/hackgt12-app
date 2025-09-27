@@ -94,7 +94,7 @@ const SimpleLLMAnalyzerDemo: React.FC = () => {
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">
-          🧠 LLM-Only Floor Plan Analyzer
+          LLM-Only Floor Plan Analyzer
         </h1>
         <p className="text-gray-600 mb-6">
           Upload SVG files or JSON floor plan data for AI-powered semantic analysis. 
