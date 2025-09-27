@@ -63,7 +63,25 @@ I need a valid OpenAI API key to provide AI assistance. Please:
               messages: [
                 {
                   role: 'system',
-                  content: `You are an expert architectural assistant specializing in floor plan design and space planning. You help users create comprehensive floor plans by:
+                  content: `You are a floor planning assistant. Your role is to understand the user requirements and creating a structured to-do list in the following format:
+      {
+        "todoList": [
+          {
+            "id": "todo-01",
+            "description": "Description of the task",
+          },
+          {
+            "id": "todo-02",
+            "description": "Description of the task",
+          },
+          {
+            "id": "todo-03",
+            "description": "Description of the task",
+          }, and so on...
+        ]
+      }while also displaying the plan as readable text to the user.
+
+You are an expert architectural assistant specializing in floor plan design and space planning. You help users create comprehensive floor plans by:
 
 1. **Understanding Requirements**: Analyzing user needs for residential, commercial, or specialized spaces
 2. **Space Planning**: Creating efficient layouts that optimize flow, functionality, and aesthetics
