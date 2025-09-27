@@ -4,7 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { SimpleLLMAnalyzer, SimpleFloorPlanData } from './simple-llm-analyzer';
 
 const SimpleLLMAnalyzerDemo: React.FC = () => {
-  const [inputType, setInputType] = useState<'svg' | 'json'>('svg');
+  const [inputType, setInputType] = useState<'svg' | 'json' | 'image'>('svg');
   const [inputContent, setInputContent] = useState<string>('');
   const [apiKey, setApiKey] = useState<string>('');
   const [result, setResult] = useState<SimpleFloorPlanData | null>(null);
@@ -16,13 +16,24 @@ const SimpleLLMAnalyzerDemo: React.FC = () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setInputContent(e.target?.result as string);
+        if (inputType === 'image') {
+          // For images, store as base64 data URL
+          setInputContent(e.target?.result as string);
+        } else {
+          // For text files (SVG/JSON), read as text
+          setInputContent(e.target?.result as string);
+        }
         setResult(null);
         setError('');
       };
-      reader.readAsText(file);
+      
+      if (inputType === 'image') {
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsText(file);
+      }
     }
-  }, []);
+  }, [inputType]);
 
   const handleAnalyze = useCallback(async () => {
     if (!inputContent) {
@@ -45,6 +56,8 @@ const SimpleLLMAnalyzerDemo: React.FC = () => {
       
       if (inputType === 'svg') {
         analysisResult = await analyzer.analyzeSVG(inputContent);
+      } else if (inputType === 'image') {
+        analysisResult = await analyzer.analyzeImage(inputContent);
       } else {
         const jsonData = JSON.parse(inputContent);
         analysisResult = await analyzer.analyzeJSON(jsonData);
@@ -110,10 +123,20 @@ const SimpleLLMAnalyzerDemo: React.FC = () => {
                   type="radio"
                   value="json"
                   checked={inputType === 'json'}
-                  onChange={(e) => setInputType(e.target.value as 'svg' | 'json')}
+                  onChange={(e) => setInputType(e.target.value as 'svg' | 'json' | 'image')}
                   className="mr-2"
                 />
                 JSON Floor Plan Data
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="image"
+                  checked={inputType === 'image'}
+                  onChange={(e) => setInputType(e.target.value as 'svg' | 'json' | 'image')}
+                  className="mr-2"
+                />
+                Image (PNG, JPG, etc.)
               </label>
             </div>
           </div>
@@ -125,7 +148,7 @@ const SimpleLLMAnalyzerDemo: React.FC = () => {
             </label>
             <input
               type="file"
-              accept={inputType === 'svg' ? '.svg' : '.json'}
+              accept={inputType === 'svg' ? '.svg' : inputType === 'json' ? '.json' : 'image/*'}
               onChange={handleFileUpload}
               className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
@@ -136,15 +159,29 @@ const SimpleLLMAnalyzerDemo: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Or Paste {inputType.toUpperCase()} Content
             </label>
-            <textarea
-              value={inputContent}
-              onChange={(e) => setInputContent(e.target.value)}
-              placeholder={inputType === 'svg' 
-                ? 'Paste SVG content here...' 
-                : 'Paste JSON floor plan data here...'
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32"
-            />
+            {inputType === 'image' ? (
+              <div className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32 bg-gray-50 flex items-center justify-center">
+                {inputContent ? (
+                  <img 
+                    src={inputContent} 
+                    alt="Uploaded floor plan" 
+                    className="max-w-full max-h-full object-contain"
+                  />
+                ) : (
+                  <span className="text-gray-500">Upload an image to see preview</span>
+                )}
+              </div>
+            ) : (
+              <textarea
+                value={inputContent}
+                onChange={(e) => setInputContent(e.target.value)}
+                placeholder={inputType === 'svg' 
+                  ? 'Paste SVG content here...' 
+                  : 'Paste JSON floor plan data here...'
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32"
+              />
+            )}
           </div>
 
           {/* API Key */}

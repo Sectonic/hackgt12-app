@@ -45,7 +45,7 @@ export class SimpleLLMAnalyzer {
   constructor(
     apiKey: string,
     baseUrl = 'https://api.openai.com/v1',
-    model = 'gpt-4'
+    model = 'gpt-5'
   ) {
     this.apiKey = apiKey;
     this.baseUrl = baseUrl;
@@ -74,6 +74,18 @@ export class SimpleLLMAnalyzer {
     const llmResult = await this.callLLM(prompt);
     
     return this.parseJSONResult(llmResult, jsonData);
+  }
+
+  /**
+   * Analyze floor plan from image (base64 data URL)
+   */
+  async analyzeImage(imageDataUrl: string): Promise<SimpleFloorPlanData> {
+    console.log('Analyzing image with LLM...');
+    
+    const prompt = this.buildImagePrompt();
+    const llmResult = await this.callLLMWithImage(prompt, imageDataUrl);
+    
+    return this.parseImageResult(llmResult, imageDataUrl);
   }
 
   /**
@@ -139,6 +151,65 @@ Return only valid JSON.`;
   }
 
   /**
+   * Build prompt for image analysis
+   */
+  private buildImagePrompt(): string {
+    return `You are an expert architect analyzing a floor plan image. Please analyze the uploaded image and extract:
+
+1. Room information (names, types, areas, levels)
+2. Opening information (doors, windows, dimensions)
+3. Any text annotations or labels visible in the image
+4. Validation issues (self-intersections, connectivity problems)
+
+Please return a JSON response with this structure:
+{
+  "rooms": [
+    {
+      "id": "room-1",
+      "name": "Kitchen",
+      "type": "kitchen",
+      "level": "1",
+      "area": 15.5,
+      "polygon": [[x1,y1], [x2,y2], ...],
+      "centroid": {"x": 100, "y": 150}
+    }
+  ],
+  "openings": [
+    {
+      "id": "opening-1",
+      "type": "door",
+      "width": 0.9,
+      "height": 2.1,
+      "position": {"x": 50, "y": 100}
+    }
+  ],
+  "annotations": [
+    {
+      "id": "text-1",
+      "text": "Kitchen",
+      "position": {"x": 100, "y": 150}
+    }
+  ],
+  "validation": {
+    "hasSelfIntersections": false,
+    "isConnected": true,
+    "issues": []
+  }
+}
+
+Focus on:
+- Identifying room boundaries and types from the visual layout
+- Detecting doors and windows in the image
+- Extracting any visible text labels and annotations
+- Calculating approximate areas based on the visual scale
+- Identifying potential architectural issues
+
+Common room types: bedroom, bathroom, kitchen, living_room, dining_room, office, storage, hallway, closet, laundry, garage, basement, attic
+
+Return only valid JSON.`;
+  }
+
+  /**
    * Build prompt for JSON analysis
    */
   private buildJSONPrompt(jsonData: any): string {
@@ -185,6 +256,65 @@ Return only valid JSON.`;
   }
 
   /**
+   * Call LLM API with image
+   */
+  private async callLLMWithImage(prompt: string, imageDataUrl: string): Promise<string> {
+    if (!this.apiKey || this.apiKey.trim() === '') {
+      throw new Error('OpenAI API key is required for LLM analysis');
+    }
+
+    try {
+      // Extract base64 data from data URL
+      const base64Data = imageDataUrl.split(',')[1];
+      
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert architect. Analyze floor plan images and provide accurate semantic labels. Always return valid JSON.'
+            },
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: prompt
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: imageDataUrl
+                  }
+                }
+              ]
+            }
+          ],
+          temperature: 1,
+          max_completion_tokens: 3000
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`LLM API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } catch (error) {
+      console.error('LLM API call failed:', error);
+      throw new Error(`Failed to call LLM API: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Call LLM API
    */
   private async callLLM(prompt: string): Promise<string> {
@@ -211,8 +341,8 @@ Return only valid JSON.`;
               content: prompt
             }
           ],
-          temperature: 0.1,
-          max_tokens: 3000
+          temperature: 1,
+          max_completion_tokens: 3000
         })
       });
 
@@ -286,9 +416,37 @@ Return only valid JSON.`;
   }
 
   /**
+   * Parse image analysis result
+   */
+  private parseImageResult(llmResponse: string, imageDataUrl: string): SimpleFloorPlanData {
+    try {
+      const jsonMatch = llmResponse.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in LLM response');
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      
+      return {
+        rooms: parsed.rooms || [],
+        openings: parsed.openings || [],
+        annotations: parsed.annotations || [],
+        metadata: {
+          totalArea: parsed.rooms?.reduce((sum: number, room: any) => sum + (room.area || 0), 0) || 0,
+          roomCount: parsed.rooms?.length || 0,
+          sourceType: 'image'
+        }
+      };
+    } catch (error) {
+      console.error('Failed to parse image LLM response:', error);
+      return this.getFallbackResult('image');
+    }
+  }
+
+  /**
    * Get fallback result when LLM fails
    */
-  private getFallbackResult(sourceType: 'svg' | 'json'): SimpleFloorPlanData {
+  private getFallbackResult(sourceType: 'svg' | 'json' | 'image'): SimpleFloorPlanData {
     return {
       rooms: [],
       openings: [],
