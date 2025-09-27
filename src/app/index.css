@@ -1,0 +1,214 @@
+@import 'tailwindcss/preflight';
+@import 'tailwindcss/utilities';
+
+/* LayOut Design System - Professional CAD/Floor Plan Editor Theme
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Clean white canvas with architectural feel */
+    --background: 0 0% 98%; /* Clean white background */
+    --foreground: 0 0% 15%; /* Dark charcoal text */
+
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 0 0% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 15%;
+
+    /* Architectural blue - like blueprint lines */
+    --primary: 213 94% 58%; /* Blueprint blue */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 96%; /* Very light gray */
+    --secondary-foreground: 0 0% 15%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 213 94% 58%; /* Match primary */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%; /* Professional red */
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 90%; /* Light gray borders */
+    --input: 0 0% 96%;
+    --ring: 213 94% 58%; /* Focus ring matches primary */
+
+    /* Figjam-style dots and architectural elements */
+    --dots: 0 0% 85%; /* Light gray dots */
+    --grid: 0 0% 88%; /* Grid lines */
+    --canvas: 0 0% 98%; /* Canvas background */
+    --selection: 213 94% 58%; /* Selected elements */
+    --wall: 0 0% 25%; /* Dark wall lines */
+    --wall-fill: 0 0% 98%; /* Wall fill */
+    --room: 213 30% 95%; /* Very light blue room fill */
+    --object: 45 85% 88%; /* Light orange objects */
+
+    /* Architectural gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(213 94% 58%), hsl(213 94% 48%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    --gradient-wall: linear-gradient(90deg, hsl(0 0% 95%), hsl(0 0% 100%), hsl(0 0% 95%));
+
+    /* Soft architectural shadows */
+    --shadow-card: 0 2px 8px hsl(0 0% 0% / 0.04), 0 1px 4px hsl(0 0% 0% / 0.08);
+    --shadow-wall: 0 4px 12px hsl(0 0% 0% / 0.08), inset 0 1px 0 hsl(0 0% 100%);
+    --shadow-hover: 0 4px 16px hsl(0 0% 0% / 0.12), 0 2px 8px hsl(0 0% 0% / 0.08);
+
+    /* Animation timing */
+    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background-image: radial-gradient(circle, hsl(var(--dots)) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: 0 0;
+  }
+
+  /* Custom architectural card styles */
+  .wall-card {
+    position: relative;
+    background: linear-gradient(135deg, hsl(var(--card)), hsl(var(--wall-fill)));
+    border: 2px solid hsl(var(--wall));
+    box-shadow: var(--shadow-wall);
+    transition: var(--transition-smooth);
+  }
+
+  .wall-card::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background:
+      linear-gradient(
+        45deg,
+        transparent 8px,
+        hsl(var(--wall)) 8px,
+        hsl(var(--wall)) 10px,
+        transparent 10px
+      ),
+      linear-gradient(
+        -45deg,
+        transparent 8px,
+        hsl(var(--wall)) 8px,
+        hsl(var(--wall)) 10px,
+        transparent 10px
+      );
+    background-size: 20px 20px;
+    z-index: -1;
+    border-radius: calc(var(--radius) + 2px);
+    opacity: 0.1;
+  }
+
+  .wall-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    border-color: hsl(var(--primary));
+  }
+
+  .wall-card:hover::before {
+    opacity: 0.2;
+  }
+
+  .feature-card {
+    position: relative;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card);
+    transition: var(--transition-spring);
+    overflow: hidden;
+  }
+
+  .feature-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--gradient-primary);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: var(--transition-smooth);
+  }
+
+  .feature-card:hover::after {
+    transform: scaleX(1);
+  }
+
+  .blueprint-grid {
+    background-image:
+      linear-gradient(hsl(var(--grid)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--grid)) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.3;
+  }
+}

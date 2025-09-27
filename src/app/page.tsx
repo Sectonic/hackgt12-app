@@ -1,157 +1,77 @@
 'use client';
 
-import React from 'react';
-import { z } from 'zod';
-import {
-  useRegisterState,
-  useRegisterFrontendTool,
-  useSubscribeStateToAgentContext,
-} from 'cedar-os';
+import { useEffect, useState } from 'react';
+import { Toaster } from '@/app/components/ui/toaster';
+import { Toaster as Sonner } from '@/app/components/ui/sonner';
+import { TooltipProvider } from '@/app/components/ui/tooltip';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { supabase } from '@/app/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
+import Header from '@/app/components/Header';
+import Home from '@/app/pages/Home';
+import Auth from '@/app/pages/Auth';
+import Plans from '@/app/pages/Plans';
+import Editor from '@/app/pages/Editor';
+import ShareView from '@/app/pages/ShareView';
+import NotFound from '@/app/pages/NotFound';
 
-import { ChatModeSelector } from '@/components/ChatModeSelector';
-import { CedarCaptionChat } from '@/cedar/components/chatComponents/CedarCaptionChat';
-import { FloatingCedarChat } from '@/cedar/components/chatComponents/FloatingCedarChat';
-import { SidePanelCedarChat } from '@/cedar/components/chatComponents/SidePanelCedarChat';
-import { DebuggerPanel } from '@/cedar/components/debugger';
-
-type ChatMode = 'floating' | 'sidepanel' | 'caption';
+const queryClient = new QueryClient();
 
 export default function HomePage() {
-  // Cedar-OS chat components with mode selector
-  // Choose between caption, floating, or side panel chat modes
-  const [chatMode, setChatMode] = React.useState<ChatMode>('sidepanel');
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Cedar state for the main text that can be changed by the agent
-  const [mainText, setMainText] = React.useState('tell Cedar to change me');
+  useEffect(() => {
+    // Set up auth state listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
 
-  // Cedar state for dynamically added text lines
-  const [textLines, setTextLines] = React.useState<string[]>([]);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-  // Register the main text as Cedar state with a state setter
-  useRegisterState({
-    key: 'mainText',
-    description: 'The main text that can be modified by Cedar',
-    value: mainText,
-    setValue: setMainText,
-    stateSetters: {
-      changeText: {
-        name: 'changeText',
-        description: 'Change the main text to a new value',
-        argsSchema: z.object({
-          newText: z.string().min(1, 'Text cannot be empty').describe('The new text to display'),
-        }),
-        execute: (
-          currentText: string,
-          setValue: (newValue: string) => void,
-          args: { newText: string },
-        ) => {
-          setValue(args.newText);
-        },
-      },
-    },
-  });
+    return () => subscription.unsubscribe();
+  }, []);
 
-  // Subscribe the main text state to the backend
-  useSubscribeStateToAgentContext('mainText', (mainText) => ({ mainText }), {
-    showInChat: true,
-    color: '#4F46E5',
-  });
-
-  // Register frontend tool for adding text lines
-  useRegisterFrontendTool({
-    name: 'addNewTextLine',
-    description: 'Add a new line of text to the screen via frontend tool',
-    argsSchema: z.object({
-      text: z.string().min(1, 'Text cannot be empty').describe('The text to add to the screen'),
-      style: z
-        .enum(['normal', 'bold', 'italic', 'highlight'])
-        .optional()
-        .describe('Text style to apply'),
-    }),
-    execute: async (args: { text: string; style?: 'normal' | 'bold' | 'italic' | 'highlight' }) => {
-      const styledText =
-        args.style === 'bold'
-          ? `**${args.text}**`
-          : args.style === 'italic'
-            ? `*${args.text}*`
-            : args.style === 'highlight'
-              ? `🌟 ${args.text} 🌟`
-              : args.text;
-      setTextLines((prev) => [...prev, styledText]);
-    },
-  });
-
-  const renderContent = () => (
-    <div className="relative h-screen w-full">
-      <ChatModeSelector currentMode={chatMode} onModeChange={setChatMode} />
-
-      {/* Main interactive content area */}
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 space-y-8">
-        {/* Big text that Cedar can change */}
-        <div className="text-center">
-          <h1 className="text-6xl font-bold text-gray-800 mb-4">{mainText}</h1>
-          <p className="text-lg text-gray-600 mb-8">
-            This text can be changed by Cedar using state setters
-          </p>
-        </div>
-
-        {/* Instructions for adding new text */}
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold text-gray-700 mb-2">
-            tell cedar to add new lines of text to the screen
-          </h2>
-          <p className="text-md text-gray-500 mb-6">
-            Cedar can add new text using frontend tools with different styles
-          </p>
-        </div>
-
-        {/* Display dynamically added text lines */}
-        {textLines.length > 0 && (
-          <div className="w-full max-w-2xl">
-            <h3 className="text-xl font-medium text-gray-700 mb-4 text-center">Added by Cedar:</h3>
-            <div className="space-y-2">
-              {textLines.map((line, index) => (
-                <div
-                  key={index}
-                  className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center"
-                >
-                  {line.startsWith('**') && line.endsWith('**') ? (
-                    <strong className="text-blue-800">{line.slice(2, -2)}</strong>
-                  ) : line.startsWith('*') && line.endsWith('*') ? (
-                    <em className="text-blue-700">{line.slice(1, -1)}</em>
-                  ) : line.startsWith('🌟') ? (
-                    <span className="text-yellow-600 font-semibold">{line}</span>
-                  ) : (
-                    <span className="text-blue-800">{line}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {chatMode === 'caption' && <CedarCaptionChat />}
-
-      {chatMode === 'floating' && (
-        <FloatingCedarChat side="right" title="Cedarling Chat" collapsedLabel="Chat with Cedar" />
-      )}
-    </div>
-  );
-
-  if (chatMode === 'sidepanel') {
+  if (loading) {
     return (
-      <SidePanelCedarChat
-        side="right"
-        title="Cedarling Chat"
-        collapsedLabel="Chat with Cedar"
-        showCollapsedButton={true}
-      >
-        <DebuggerPanel />
-        {renderContent()}
-      </SidePanelCedarChat>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
-  return renderContent();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className="min-h-screen bg-background">
+            <Header user={user} />
+            <Routes>
+              <Route path="/" element={<Home user={user} />} />
+              <Route path="/auth" element={user ? <Navigate to="/plans" replace /> : <Auth />} />
+              <Route
+                path="/plans"
+                element={user ? <Plans user={user} /> : <Navigate to="/auth" replace />}
+              />
+              <Route
+                path="/plans/:id/editor"
+                element={user ? <Editor user={user} /> : <Navigate to="/auth" replace />}
+              />
+              <Route path="/s/:token" element={<ShareView />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
 }
