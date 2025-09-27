@@ -185,10 +185,20 @@ Sorry, I encountered an error while analyzing your file. Please try uploading a 
       if (fileType === 'image') {
         prompt = `You are an expert architect analyzing a floor plan image. Please analyze the uploaded image and extract:
 
-1. Room information (names, types, areas, levels)
-2. Opening information (doors, windows, dimensions)
-3. Any text annotations or labels visible in the image
+1. Room information (names, types, areas, levels) - Identify all enclosed spaces
+2. Opening information (doors, windows, dimensions) - Locate all passages and openings
+3. Create visual annotations for better recognition:
+   - Add text labels for rooms that don't have them
+   - Mark door and window positions with clear labels
+   - Add area measurements where missing
+   - Highlight room boundaries and connections
 4. Validation issues (self-intersections, connectivity problems)
+
+IMPORTANT: For better recognition, create detailed annotations that will help identify:
+- Room boundaries and connections
+- Door and window positions with dimensions
+- Area calculations and measurements
+- Clear room labels and types
 
 Please return a JSON response with this structure:
 {
@@ -213,7 +223,20 @@ Please return a JSON response with this structure:
     {
       "id": "text-1",
       "text": "Kitchen",
-      "position": {"x": 100, "y": 150}
+      "position": {"x": 100, "y": 150},
+      "type": "room_label"
+    },
+    {
+      "id": "area-1", 
+      "text": "15.5 m²",
+      "position": {"x": 120, "y": 170},
+      "type": "area_measurement"
+    },
+    {
+      "id": "door-1",
+      "text": "Door 0.9m",
+      "position": {"x": 200, "y": 100},
+      "type": "opening_label"
     }
   ],
   "metadata": {
@@ -228,7 +251,7 @@ Focus on identifying room boundaries, doors, windows, and any visible text label
         messages = [
           {
             role: 'system',
-            content: 'You are an expert architect. Analyze floor plan images and provide accurate semantic labels. Always return valid JSON.'
+            content: 'You are an expert architect specializing in floor plan analysis and annotation. Your goal is to create comprehensive visual annotations that make floor plans easier to understand and analyze. Focus on identifying rooms, openings, and creating clear labels and measurements. Always return valid JSON.'
           },
           {
             role: 'user',
@@ -241,10 +264,20 @@ Focus on identifying room boundaries, doors, windows, and any visible text label
       } else {
         prompt = `You are an expert architect analyzing a floor plan ${fileType.toUpperCase()} file. Please analyze the content and extract:
 
-1. Room information (names, types, areas, levels)
-2. Opening information (doors, windows, dimensions)
-3. Any text annotations or labels
-4. Validation issues
+1. Room information (names, types, areas, levels) - Identify all enclosed spaces
+2. Opening information (doors, windows, dimensions) - Locate all passages and openings
+3. Create comprehensive annotations for better recognition:
+   - Add text labels for rooms that don't have them
+   - Mark door and window positions with clear labels
+   - Add area measurements where missing
+   - Highlight room boundaries and connections
+4. Validation issues (self-intersections, connectivity problems)
+
+IMPORTANT: For better recognition, create detailed annotations that will help identify:
+- Room boundaries and connections
+- Door and window positions with dimensions
+- Area calculations and measurements
+- Clear room labels and types
 
 Content:
 \`\`\`${fileType}
@@ -274,7 +307,20 @@ Please return a JSON response with this structure:
     {
       "id": "text-1",
       "text": "Kitchen",
-      "position": {"x": 100, "y": 150}
+      "position": {"x": 100, "y": 150},
+      "type": "room_label"
+    },
+    {
+      "id": "area-1", 
+      "text": "15.5 m²",
+      "position": {"x": 120, "y": 170},
+      "type": "area_measurement"
+    },
+    {
+      "id": "door-1",
+      "text": "Door 0.9m",
+      "position": {"x": 200, "y": 100},
+      "type": "opening_label"
     }
   ],
   "metadata": {
@@ -289,7 +335,7 @@ Return only valid JSON.`;
         messages = [
           {
             role: 'system',
-            content: 'You are an expert architect. Analyze floor plan data and provide accurate semantic labels. Always return valid JSON.'
+            content: 'You are an expert architect specializing in floor plan analysis and annotation. Your goal is to create comprehensive visual annotations that make floor plans easier to understand and analyze. Focus on identifying rooms, openings, and creating clear labels and measurements. Always return valid JSON.'
           },
           {
             role: 'user',
