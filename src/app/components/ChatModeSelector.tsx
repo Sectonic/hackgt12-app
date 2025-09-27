@@ -1,7 +1,7 @@
 import React from 'react';
 import { MessageCircle, PanelRight, Type } from 'lucide-react';
 
-type ChatMode = 'floating' | 'sidepanel' | 'caption';
+export type ChatMode = 'floating' | 'sidepanel' | 'caption';
 
 interface ChatModeSelectorProps {
   currentMode: ChatMode;

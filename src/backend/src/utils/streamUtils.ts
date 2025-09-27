@@ -43,11 +43,10 @@ export function createSSEStream(
 
 /**
  * Emit any JSON object as a data event.
- * Used for actions, tool responses, custom events, etc.
+ * Use this to stream structured data like tool results, progress updates, or custom events.
  */
 export function streamJSONEvent<T>(
   controller: ReadableStreamDefaultController<Uint8Array>,
-  eventType: string,
   eventData: T,
 ) {
   const encoder = new TextEncoder();
@@ -56,30 +55,25 @@ export function streamJSONEvent<T>(
 }
 
 /**
- * Handles streaming of text chunks to SSE controller for Mastra's streamVNext compatibility
- *
- * @param streamResult - The StreamTextResult from an AI agent
- * @param streamController - Optional SSE stream controller
- * @returns Promise<string> - The complete response text
+ * Handles streaming of text chunks using data-only format.
+ * Pass your agent's stream result and the controller to stream text chunks to frontend.
  */
 export async function handleTextStream(
-  chunk: string,
+  streamResult: { textStream: AsyncIterable<string> },
   streamController: ReadableStreamDefaultController<Uint8Array>,
 ): Promise<string> {
   const encoder = new TextEncoder();
-  // Proper SSE formatting: each data line should begin with 'data: '
-  // Split on real newlines so multi-line model deltas render correctly client-side.
-  const lines = chunk.split(/\r?\n/);
-  for (const line of lines) {
-    // Skip sending an empty trailing line caused by split on ending newline; preserve intentional blanks.
-    if (line.length === 0) {
-      continue;
-    }
-    streamController.enqueue(encoder.encode(`data: ${line}\n`));
+  const chunks: string[] = [];
+
+  // Stream raw text chunks through data field
+  for await (const chunk of streamResult.textStream) {
+    chunks.push(chunk);
+    // Escape literal newlines for SSE compliance
+    const escaped = chunk.replace(/\n/g, '\\n');
+    streamController.enqueue(encoder.encode(`data: ${escaped}\n\n`));
   }
-  // Terminate this SSE message block
-  streamController.enqueue(encoder.encode(`\n`));
-  return chunk;
+
+  return chunks.join('');
 }
 
 /**
