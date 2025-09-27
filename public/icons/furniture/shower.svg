@@ -1,0 +1,13 @@
+<svg width="121" height="83" viewBox="0 0 121 83" fill="none" xmlns="http://www.w3.org/2000/svg">
+<mask id="path-1-inside-1_404_1103" fill="white">
+<path d="M0 0H120V80H0V0Z"/>
+</mask>
+<path d="M0 0H120V80H0V0Z" fill="#CCEEFF"/>
+<path d="M0 0V-1H-1V0H0ZM120 0H121V-1H120V0ZM120 80V81H121V80H120ZM0 80H-1V81H0V80ZM0 1H120V-1H0V1ZM119 0V80H121V0H119ZM120 79H0V81H120V79ZM1 80V0H-1V80H1Z" fill="#2E3D4D" mask="url(#path-1-inside-1_404_1103)"/>
+<path d="M30 1H34L14 79H10L30 1Z" fill="white"/>
+<path d="M42 1H53L33 79H22L42 1Z" fill="white"/>
+<path d="M60 1H58L38 79H40L60 1Z" fill="white"/>
+<rect x="100" y="10" width="10" height="58" fill="black" fill-opacity="0.2"/>
+<path d="M65 80H70V80.5C70 81.8807 68.8807 83 67.5 83C66.1193 83 65 81.8807 65 80.5V80Z" fill="#2E3D4D"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M120 80H60V77H120V80Z" fill="#2E3D4D" stroke="#2E3D4D"/>
+</svg>

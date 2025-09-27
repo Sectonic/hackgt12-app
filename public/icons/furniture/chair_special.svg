@@ -1,0 +1,32 @@
+<svg width="75" height="85" viewBox="0 0 75 85" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="61.5" y="0.5" width="3" height="84" fill="#E5A0C3" stroke="#2E3D4D"/>
+<rect x="10.5" y="0.5" width="3" height="84" fill="#E5A0C3" stroke="#2E3D4D"/>
+<rect x="2.5" y="30.5" width="70" height="49" rx="1.5" fill="#2E3D4D" stroke="#2E3D4D"/>
+<circle cx="61" cy="68" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="45" cy="68" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="30" cy="68" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="15" cy="68" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="61" cy="55" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="45" cy="55" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="30" cy="55" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="15" cy="55" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="61" cy="42" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="45" cy="42" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="30" cy="42" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="15" cy="42" r="1" fill="black" fill-opacity="0.4"/>
+<rect x="2" y="30" width="71" height="7" rx="2" fill="black" fill-opacity="0.2"/>
+<path d="M2.16016 5.5H72.8398C73.7136 5.5 74.4029 6.24404 74.3359 7.11523L72.6436 29.1152C72.5833 29.8966 71.9312 30.5 71.1475 30.5H3.85254C3.0688 30.5 2.41665 29.8966 2.35645 29.1152L0.664062 7.11523C0.597048 6.24404 1.28639 5.5 2.16016 5.5Z" fill="#2E3D4D" stroke="#2E3D4D"/>
+<circle cx="61" cy="27" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="45" cy="27" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="30" cy="27" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="14" cy="27" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="61.5" cy="23" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="45" cy="23" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="30" cy="23" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="13.5" cy="23" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="62" cy="19" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="45" cy="19" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="30" cy="19" r="1" fill="black" fill-opacity="0.4"/>
+<circle cx="13" cy="19" r="1" fill="black" fill-opacity="0.4"/>
+<path d="M73 15H2" stroke="black" stroke-opacity="0.2" stroke-linecap="round"/>
+</svg>
