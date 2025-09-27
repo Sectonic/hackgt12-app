@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "cedar-mcp": {
+      "url": "https://mcpwithcedar-production.up.railway.app/jsonrpc",
+      "description": "Cedar-OS Expert MCP Server"
+    }
+  }
+}
+
+

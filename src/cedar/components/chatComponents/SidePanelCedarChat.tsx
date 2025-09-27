@@ -27,8 +27,8 @@ interface SidePanelCedarChatProps {
 export const SidePanelCedarChat: React.FC<SidePanelCedarChatProps> = ({
   children, // Page content
   side = 'right',
-  title = 'Cedar Chat',
-  collapsedLabel = 'How can I help you today?',
+  title = 'Floor Plan Assistant',
+  collapsedLabel = 'Create your floor plan tasks',
   showCollapsedButton = true,
   companyLogo,
   dimensions = {
@@ -68,7 +68,7 @@ export const SidePanelCedarChat: React.FC<SidePanelCedarChatProps> = ({
     });
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch('/api/plan/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: userText, temperature: 0.2 }),
@@ -104,6 +104,34 @@ export const SidePanelCedarChat: React.FC<SidePanelCedarChatProps> = ({
                   role: 'assistant',
                   content: copy[idx].content + delta,
                 };
+
+                // Check if the response contains a completed JSON structure
+                const fullContent = copy[idx].content;
+                try {
+                  // Look for JSON structure at the beginning of the response
+                  if (fullContent.startsWith('{"todoList":')) {
+                    const jsonStr = fullContent.split('\n')[0]; // Get first line
+                    const parsed = JSON.parse(jsonStr);
+                    if (parsed.todoList && Array.isArray(parsed.todoList)) {
+                      console.log('🎯 Completed Floor Plan JSON:', parsed);
+                      console.log('📋 Todo List:', parsed.todoList);
+                    }
+                  }
+                  // Also try the regex approach for other cases
+                  else {
+                    const jsonMatch = fullContent.match(/\{[^{}]*"todoList"[^{}]*\}/);
+                    if (jsonMatch) {
+                      const jsonStr = jsonMatch[0];
+                      const parsed = JSON.parse(jsonStr);
+                      if (parsed.todoList && Array.isArray(parsed.todoList)) {
+                        console.log('🎯 Completed Floor Plan JSON:', parsed);
+                        console.log('📋 Todo List:', parsed.todoList);
+                      }
+                    }
+                  }
+                } catch (error) {
+                  console.log('JSON parsing failed:', error);
+                }
               }
               return copy;
             });
@@ -117,6 +145,40 @@ export const SidePanelCedarChat: React.FC<SidePanelCedarChatProps> = ({
       ]);
     } finally {
       setIsSending(false);
+
+      // Final check for JSON in the last assistant message
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage && lastMessage.role === 'assistant') {
+          try {
+            const content = lastMessage.content;
+            // Check if JSON is at the beginning
+            if (content.startsWith('{"todoList":')) {
+              const jsonStr = content.split('\n')[0];
+              const parsed = JSON.parse(jsonStr);
+              if (parsed.todoList && Array.isArray(parsed.todoList)) {
+                console.log('🎯 Final Floor Plan JSON:', parsed);
+                console.log('📋 Final Todo List:', parsed.todoList);
+              }
+            }
+            // Also try regex approach
+            else {
+              const jsonMatch = content.match(/\{[^{}]*"todoList"[^{}]*\}/);
+              if (jsonMatch) {
+                const jsonStr = jsonMatch[0];
+                const parsed = JSON.parse(jsonStr);
+                if (parsed.todoList && Array.isArray(parsed.todoList)) {
+                  console.log('🎯 Final Floor Plan JSON:', parsed);
+                  console.log('📋 Final Todo List:', parsed.todoList);
+                }
+              }
+            }
+          } catch (error) {
+            console.log('Final JSON parsing failed:', error);
+          }
+        }
+        return prev;
+      });
     }
   }
 
@@ -187,7 +249,7 @@ export const SidePanelCedarChat: React.FC<SidePanelCedarChatProps> = ({
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type your message..."
+                  placeholder="Describe your floor plan requirements..."
                   className="flex-1 rounded-md border border-gray-300 dark:border-gray-700 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                   disabled={isSending}
                 />
