@@ -1,17 +1,20 @@
-import { useState } from 'react';
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { Plus, FileText } from 'lucide-react';
 import { SidePanelCedarChat } from '@/cedar/components/chatComponents/SidePanelCedarChat';
 import { useCedarStore } from 'cedar-os';
+import { supabase } from '@/app/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 
-interface PlansProps {
-  user: User | null;
-}
-
-export default function Plans({ user }: PlansProps) {
+export default function PlansPage() {
   const [activeTab, setActiveTab] = useState('my-plans');
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   // Get Cedar store functions
   const setShowChat = useCedarStore((state) => state.setShowChat);
@@ -20,6 +23,31 @@ export default function Plans({ user }: PlansProps) {
   const handleCreatePlan = () => {
     setShowChat(true);
   };
+
+  useEffect(() => {
+    // Get current user
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/auth');
+        return;
+      }
+      setUser(user);
+      setLoading(false);
+    };
+
+    getUser();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const plansContent = (
     <div className="container mx-auto px-6 py-8">

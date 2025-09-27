@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/app/components/ui/button';
 import {
   DropdownMenu,
@@ -19,7 +20,7 @@ interface HeaderProps {
 }
 
 export default function Header({ user }: HeaderProps) {
-  const location = useLocation();
+  const pathname = usePathname();
   const { toast } = useToast();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -33,10 +34,10 @@ export default function Header({ user }: HeaderProps) {
         title: 'Signed out successfully',
         description: 'You have been signed out of LayOut.',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Error signing out',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
         variant: 'destructive',
       });
     } finally {
@@ -44,15 +45,15 @@ export default function Header({ user }: HeaderProps) {
     }
   };
 
-  const isOnPlansPage = location.pathname.startsWith('/plans');
-  const isOnEditorPage = location.pathname.includes('/editor');
+  const isOnPlansPage = pathname?.startsWith('/plans');
+  const isOnEditorPage = pathname?.includes('/editor');
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md supports-backdrop-blur:bg-background/80 shadow-sm">
       <div className="container flex h-16 items-center justify-between px-6">
         <div className="flex items-center space-x-6">
           <Link
-            to="/"
+            href="/"
             className="flex items-center space-x-3 text-2xl font-bold text-foreground hover:text-primary transition-colors group"
           >
             <div className="relative">
@@ -62,13 +63,7 @@ export default function Header({ user }: HeaderProps) {
             <span className="tracking-tight">LayOut</span>
           </Link>
 
-          {user && !isOnEditorPage && (
-            <nav className="flex items-center space-x-1">
-              <Button variant={isOnPlansPage ? 'secondary' : 'ghost'} size="sm" asChild>
-                <Link to="/plans">Plans</Link>
-              </Button>
-            </nav>
-          )}
+          {user && !isOnEditorPage && <nav className="flex items-center space-x-1"></nav>}
         </div>
 
         <div className="flex items-center space-x-4">
@@ -111,7 +106,7 @@ export default function Header({ user }: HeaderProps) {
             </DropdownMenu>
           ) : (
             <Button asChild>
-              <Link to="/auth">Sign In</Link>
+              <Link href="/auth">Sign In</Link>
             </Button>
           )}
         </div>
