@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import ChatSVGParser from '../components/ui/ChatSVGParser';
+import ChatSVGParser from '@/app/components/ui/ChatSVGParser';
 
 export default function SVGParser() {
   return <ChatSVGParser />;
