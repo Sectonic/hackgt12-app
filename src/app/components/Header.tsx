@@ -62,8 +62,6 @@ export default function Header({ user }: HeaderProps) {
             </div>
             <span className="tracking-tight">LayOut</span>
           </Link>
-
-          {user && !isOnEditorPage && <nav className="flex items-center space-x-1"></nav>}
         </div>
 
         <div className="flex items-center space-x-4">
