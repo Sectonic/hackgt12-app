@@ -47,6 +47,7 @@ export default function Header({ user }: HeaderProps) {
 
   const isOnPlansPage = pathname?.startsWith('/plans');
   const isOnEditorPage = pathname?.includes('/editor');
+  const isOnSVGParserPage = pathname?.includes('/svg-parser');
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md supports-backdrop-blur:bg-background/80 shadow-sm">
@@ -62,6 +63,29 @@ export default function Header({ user }: HeaderProps) {
             </div>
             <span className="tracking-tight">LayOut</span>
           </Link>
+          {user && !isOnEditorPage && (
+            <nav className="flex items-center space-x-1">
+              <Button
+                variant={isOnPlansPage ? 'secondary' : 'ghost'}
+                size="sm"
+                asChild
+                className={
+                  !isOnPlansPage
+                    ? 'text-foreground opacity-100 hover:bg-secondary hover:text-secondary-foreground'
+                    : ''
+                }
+              >
+                <Link href="/plans">Plans</Link>
+              </Button>
+            </nav>
+          )}
+          {user && !isOnEditorPage && (
+            <nav className="flex items-center space-x-1">
+              <Button variant={isOnSVGParserPage ? 'secondary' : 'ghost'} size="sm" asChild>
+                <Link href="/svg-parser">SVG Parser</Link>
+              </Button>
+            </nav>
+          )}
         </div>
 
         <div className="flex items-center space-x-4">
