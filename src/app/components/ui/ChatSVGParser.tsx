@@ -45,9 +45,9 @@ export default function ChatSVGParser() {
     const baseMessage = "Hi! I'm your AI Floor Plan Analyzer. Upload any floor plan file (SVG, image, or JSON) and I'll analyze it for you. I can automatically detect the file type and provide detailed insights about rooms, openings, and architectural features.";
     
     if (isApiKeyConfigured) {
-      return baseMessage + "\n\nOpenAI API configured - ready for real AI analysis!";
+      return baseMessage + "\n\n✅ OpenAI API configured - ready for real AI analysis!";
     } else {
-      return baseMessage + "\n\n**Note**: No OpenAI API key configured. I'll use demo data for analysis. To enable real AI analysis, set the NEXT_PUBLIC_OPENAI_API_KEY environment variable.";
+      return baseMessage + "\n\n⚠️ **OpenAI API key required**: Please set the NEXT_PUBLIC_OPENAI_API_KEY environment variable to enable AI analysis. Without it, analysis will fail.";
     }
   };
 
@@ -175,8 +175,7 @@ Sorry, I encountered an error while analyzing your file. Please try uploading a 
 
   const callOpenAI = async (fileType: string, content: string): Promise<any> => {
     if (!isApiKeyConfigured) {
-      // Fallback to simulated analysis if no API key
-      return simulateAIAnalysis(fileType, content);
+      throw new Error('OpenAI API key is required for LLM analysis. Please set NEXT_PUBLIC_OPENAI_API_KEY environment variable.');
     }
 
     try {
@@ -330,39 +329,10 @@ Return only valid JSON.`;
 
     } catch (error) {
       console.error('OpenAI API call failed:', error);
-      // Fallback to simulated analysis
-      return simulateAIAnalysis(fileType, content);
+      throw new Error(`LLM analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
-  const simulateAIAnalysis = async (fileType: string, content: string): Promise<any> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Return sample analysis data
-    return {
-      rooms: [
-        { id: 'room-1', name: 'Living Room', type: 'living_room', area: 25.5, level: '1' },
-        { id: 'room-2', name: 'Kitchen', type: 'kitchen', area: 12.3, level: '1' },
-        { id: 'room-3', name: 'Master Bedroom', type: 'bedroom', area: 18.7, level: '1' },
-        { id: 'room-4', name: 'Bathroom', type: 'bathroom', area: 6.2, level: '1' }
-      ],
-      openings: [
-        { id: 'opening-1', type: 'door', width: 0.9, height: 2.1 },
-        { id: 'opening-2', type: 'window', width: 1.2, height: 1.5 },
-        { id: 'opening-3', type: 'door', width: 0.8, height: 2.1 }
-      ],
-      annotations: [
-        { id: 'text-1', text: 'Living Room', position: { x: 100, y: 150 } },
-        { id: 'text-2', text: 'Kitchen', position: { x: 200, y: 100 } }
-      ],
-      metadata: {
-        totalArea: 62.7,
-        roomCount: 4,
-        sourceType: fileType
-      }
-    };
-  };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() && !uploadedFile) return;
@@ -490,8 +460,8 @@ Return only valid JSON.`;
                 ) : (
                   <>
                     <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
-                      Demo mode - set NEXT_PUBLIC_OPENAI_API_KEY for real AI analysis
+                    <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                    OpenAI API configured - ready for real AI analysis!
                     </span>
                   </>
                 )}
