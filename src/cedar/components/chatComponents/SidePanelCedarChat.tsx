@@ -86,7 +86,11 @@ export const SidePanelCedarChat: React.FC<SidePanelCedarChatProps> = ({
     return text
       .replace(/([.!?])([A-Z])/g, '$1 $2') // Add space after sentence endings
       .replace(/([a-z])([A-Z])/g, '$1 $2') // Add space between camelCase
+      .replace(/(\w)([A-Z])/g, '$1 $2') // Add space between words and capitals
+      .replace(/([a-z])(\d)/g, '$1 $2') // Add space between letters and numbers
+      .replace(/(\d)([A-Z])/g, '$1 $2') // Add space between numbers and capitals
       .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/\s+([.!?])/g, '$1') // Remove spaces before punctuation
       .trim();
   };
 

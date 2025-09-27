@@ -2,6 +2,21 @@ import { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+// Function to extract and log JSON from response
+function extractAndLogJSON(response: string) {
+  try {
+    // Look for JSON patterns in the response
+    const jsonMatch = response.match(/\{[\s\S]*"todoList"[\s\S]*\}/);
+    if (jsonMatch) {
+      const jsonStr = jsonMatch[0];
+      const parsed = JSON.parse(jsonStr);
+      console.log('📋 Floor Plan To-Do List (JSON):', JSON.stringify(parsed, null, 2));
+    }
+  } catch (error) {
+    console.log('No structured JSON found in response');
+  }
+}
+
 // Real LLM-powered Floor Plan Assistant API
 export async function POST(req: NextRequest) {
   try {
@@ -63,23 +78,14 @@ I need a valid OpenAI API key to provide AI assistance. Please:
               messages: [
                 {
                   role: 'system',
-                  content: `You are a floor planning assistant. Your role is to understand the user requirements and creating a structured to-do list in the following format:
-      {
-        "todoList": [
-          {
-            "id": "todo-01",
-            "description": "Description of the task",
-          },
-          {
-            "id": "todo-02",
-            "description": "Description of the task",
-          },
-          {
-            "id": "todo-03",
-            "description": "Description of the task",
-          }, and so on...
-        ]
-      }while also displaying the plan as readable text to the user.
+                  content: `You are a floor planning assistant. Your role is to understand the user requirements and create a structured to-do list.
+
+IMPORTANT INSTRUCTIONS:
+1. Respond ONLY in natural language - do NOT show JSON to the user
+2. Create a structured to-do list in your response using numbered lists and clear descriptions
+3. Use emojis and markdown formatting to make it engaging
+4. Focus on practical, actionable tasks
+5. Do NOT include any JSON code blocks or structured data in your response
 
 You are an expert architectural assistant specializing in floor plan design and space planning. You help users create comprehensive floor plans by:
 
@@ -113,6 +119,7 @@ Always respond with detailed, actionable advice formatted in clear markdown. Use
 
           const decoder = new TextDecoder();
           let buffer = '';
+          let fullResponse = '';
 
           while (true) {
             const { value, done } = await reader.read();
@@ -126,6 +133,8 @@ Always respond with detailed, actionable advice formatted in clear markdown. Use
               if (line.startsWith('data: ')) {
                 const data = line.slice(6);
                 if (data === '[DONE]') {
+                  // Extract and log JSON to console
+                  extractAndLogJSON(fullResponse);
                   controller.enqueue(encoder.encode(`event: done\ndata: \n\n`));
                   controller.close();
                   return;
@@ -135,6 +144,7 @@ Always respond with detailed, actionable advice formatted in clear markdown. Use
                   const parsed = JSON.parse(data);
                   const content = parsed.choices?.[0]?.delta?.content;
                   if (content) {
+                    fullResponse += content;
                     controller.enqueue(encoder.encode(`data: ${content}\n\n`));
                   }
                 } catch (e) {
