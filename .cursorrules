@@ -1,0 +1,148 @@
+# Cursor Rules for HackGT12 App
+
+## Project Overview
+
+This is a Next.js application with a React frontend and Node.js backend, featuring a chat interface with multiple modes (floating, sidepanel, caption) using Cedar components.
+
+## Tech Stack
+
+- **Frontend**: Next.js, React, TypeScript, Tailwind CSS
+- **Backend**: Node.js, Mastra framework
+- **Database**: Supabase
+- **UI Components**: Cedar UI components, Radix UI
+- **State Management**: React hooks, Cedar store
+- **Routing**: React Router
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js app directory
+│   ├── components/         # React components
+│   ├── pages/             # Page components
+│   ├── hooks/             # Custom React hooks
+│   ├── integrations/      # External integrations (Supabase)
+│   └── lib/               # Utility functions and stores
+├── backend/               # Node.js backend
+│   └── src/mastra/        # Mastra framework code
+└── cedar/                 # Cedar UI components
+    └── components/        # Reusable UI components
+```
+
+## Key Components
+
+### Chat System
+
+- **SidePanelCedarChat**: Right-side chat panel with resizable functionality
+- **FloatingCedarChat**: Floating chat window
+- **EmbeddedCedarChat**: Embedded chat interface
+- **ChatModeSelector**: Toggle between chat modes (floating, sidepanel, caption)
+
+### Debug System
+
+- **DebuggerPanel**: Development debugging panel with network, messages, and states tabs
+- **NetworkTab**: Network request/response debugging
+- **MessagesTab**: Chat message debugging
+- **StatesTab**: Application state debugging
+
+## Development Guidelines
+
+### Code Style
+
+- Use TypeScript for all new files
+- Follow React functional component patterns
+- Use Tailwind CSS for styling
+- Prefer composition over inheritance
+- Use proper TypeScript interfaces for props
+
+### Import Conventions
+
+- Use absolute imports with `@/` prefix for app directory
+- Use relative imports for Cedar components
+- Group imports: React, third-party, local components, types
+
+### Component Patterns
+
+- Use React.FC for functional components
+- Define proper TypeScript interfaces for props
+- Use React.forwardRef when needed
+- Implement proper error boundaries
+
+### State Management
+
+- Use React hooks for local state
+- Use Cedar store for global state
+- Prefer useState over useReducer for simple state
+- Use useEffect for side effects
+
+### File Naming
+
+- Use PascalCase for component files
+- Use camelCase for utility files
+- Use kebab-case for CSS files
+- Use descriptive names that indicate purpose
+
+## Common Tasks
+
+### Adding New Chat Modes
+
+1. Define the mode in ChatModeSelector
+2. Add conditional rendering in page.tsx
+3. Import and configure the appropriate Cedar chat component
+4. Test the mode switching functionality
+
+### Adding New Components
+
+1. Create component file in appropriate directory
+2. Define TypeScript interface for props
+3. Export from index.ts if creating a component library
+4. Add proper error handling and loading states
+
+### Debugging
+
+- Use DebuggerPanel for development debugging
+- Check NetworkTab for API calls
+- Use MessagesTab for chat debugging
+- Monitor StatesTab for state changes
+
+## Git Workflow
+
+- Use feature branches for new functionality
+- Commit with conventional commit messages
+- Use descriptive commit messages: "feat:", "fix:", "docs:", "style:"
+- Test changes before committing
+
+## Environment Setup
+
+- Node.js 18+ required
+- Use pnpm for package management
+- Supabase configuration required
+- Environment variables in .env.local
+
+## Common Issues
+
+- Import path issues: Check tsconfig.json paths configuration
+- Component not found: Verify import paths and component exports
+- Type errors: Ensure proper TypeScript interfaces
+- Styling issues: Check Tailwind CSS classes and custom CSS
+
+## Performance Considerations
+
+- Use React.memo for expensive components
+- Implement proper loading states
+- Use lazy loading for large components
+- Optimize bundle size with dynamic imports
+
+## Testing
+
+- Test component rendering
+- Test user interactions
+- Test responsive design
+- Test chat functionality across different modes
+
+## Deployment
+
+- Build process: `npm run build`
+- Environment variables must be configured
+- Supabase connection must be working
+- Test all chat modes before deployment
