@@ -34,6 +34,9 @@ export function createSSEStream(
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
     },
   });
 }
@@ -60,15 +63,35 @@ export function streamJSONEvent<T>(
  * @returns Promise<string> - The complete response text
  */
 export async function handleTextStream(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   chunk: string,
   streamController: ReadableStreamDefaultController<Uint8Array>,
 ): Promise<string> {
   const encoder = new TextEncoder();
-
-  // Escape literal newlines for SSE compliance
-  const escaped = chunk.replace(/\n/g, '\\n');
-  streamController.enqueue(encoder.encode(`data:${escaped}\n\n`));
-
+  // Proper SSE formatting: each data line should begin with 'data: '
+  // Split on real newlines so multi-line model deltas render correctly client-side.
+  const lines = chunk.split(/\r?\n/);
+  for (const line of lines) {
+    // Skip sending an empty trailing line caused by split on ending newline; preserve intentional blanks.
+    if (line.length === 0) {
+      continue;
+    }
+    streamController.enqueue(encoder.encode(`data: ${line}\n`));
+  }
+  // Terminate this SSE message block
+  streamController.enqueue(encoder.encode(`\n`));
   return chunk;
+}
+
+/**
+ * Streams a text delta as a JSON SSE event with a standard envelope.
+ * This helps frontend parsers that expect structured events.
+ */
+export function streamTextDeltaJSON(
+  controller: ReadableStreamDefaultController<Uint8Array>,
+  text: string,
+  meta: Record<string, unknown> = {},
+) {
+  const encoder = new TextEncoder();
+  const payload = { type: 'text-delta', text, ...meta };
+  controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
 }

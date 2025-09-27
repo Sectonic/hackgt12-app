@@ -11,6 +11,7 @@ import { memory } from '../memory';
  * for your specific use case. Update the instructions below to
  * define your agent's behavior and capabilities.
  */
+
 export const starterAgent = new Agent({
   name: 'Starter Agent',
   instructions: ` 

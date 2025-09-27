@@ -1,7 +1,7 @@
 import { registerApiRoute } from '@mastra/core/server';
-import { ChatInputSchema, ChatOutput, chatWorkflow } from './workflows/chatWorkflow';
+import { ChatInputSchema, chatWorkflow } from './workflows/chatWorkflow';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { createSSEStream } from '../utils/streamUtils';
+// import { createSSEStream } from '../utils/streamUtils'; // Not needed with AI SDK v5 compatibility
 
 // Helper function to convert Zod schema to OpenAPI schema
 function toOpenApiSchema(schema: Parameters<typeof zodToJsonSchema>[0]) {
@@ -18,6 +18,78 @@ function toOpenApiSchema(schema: Parameters<typeof zodToJsonSchema>[0]) {
  * - /chat/stream: Server-sent events (SSE) endpoint for streaming responses
  */
 export const apiRoutes = [
+  // AI SDK v5 compatible route for Cedar frontend
+  registerApiRoute('/chat', {
+    method: 'POST',
+    openapi: {
+      requestBody: {
+        content: {
+          'application/json': {
+            schema: toOpenApiSchema(ChatInputSchema),
+          },
+        },
+      },
+    },
+    handler: async (c) => {
+      try {
+        const body = await c.req.json();
+        console.log('📨 Received chat request:', {
+          prompt: body.prompt?.substring(0, 100) + '...',
+        });
+
+        const {
+          prompt,
+          temperature,
+          maxTokens,
+          systemPrompt,
+          additionalContext,
+          resourceId,
+          threadId,
+        } = ChatInputSchema.parse(body);
+
+        console.log('🚀 Starting chat workflow...');
+
+        const run = await chatWorkflow.createRunAsync();
+        const result = await run.start({
+          inputData: {
+            prompt,
+            temperature,
+            maxTokens,
+            systemPrompt,
+            additionalContext,
+            resourceId,
+            threadId,
+          },
+        });
+
+        if (result.status !== 'success') {
+          console.error('❌ Workflow failed:', result.status);
+          throw new Error(`Workflow failed: ${result.status}`);
+        }
+
+        console.log('✅ Chat workflow completed successfully');
+
+        // Use Mastra's AI SDK v5 compatible streaming
+        const streamResult = result.result?.streamResult;
+        if (streamResult && streamResult.aisdk?.v5?.toUIMessageStreamResponse) {
+          console.log('📡 Returning AI SDK v5 compatible stream response');
+          return streamResult.aisdk.v5.toUIMessageStreamResponse();
+        }
+
+        // Fallback to non-streaming response
+        console.log('⚠️ No stream result found, returning static response');
+        return c.json({
+          content: result.result?.content || 'No response generated',
+          usage: result.result?.usage || {},
+        });
+      } catch (error) {
+        console.error('❌ API Error:', error);
+        return c.json({ error: error instanceof Error ? error.message : 'Internal error' }, 500);
+      }
+    },
+  }),
+
+  // Legacy route for backward compatibility
   registerApiRoute('/chat/stream', {
     method: 'POST',
     openapi: {
@@ -32,6 +104,10 @@ export const apiRoutes = [
     handler: async (c) => {
       try {
         const body = await c.req.json();
+        console.log('📨 Received legacy chat request:', {
+          prompt: body.prompt?.substring(0, 100) + '...',
+        });
+
         const {
           prompt,
           temperature,
@@ -42,28 +118,43 @@ export const apiRoutes = [
           threadId,
         } = ChatInputSchema.parse(body);
 
-        return createSSEStream(async (controller) => {
-          const run = await chatWorkflow.createRunAsync();
-          const result = await run.start({
-            inputData: {
-              prompt,
-              temperature,
-              maxTokens,
-              systemPrompt,
-              streamController: controller,
-              additionalContext,
-              resourceId,
-              threadId,
-            },
-          });
+        console.log('🚀 Starting chat workflow...');
 
-          if (result.status !== 'success') {
-            // TODO: Handle workflow errors appropriately
-            throw new Error(`Workflow failed: ${result.status}`);
-          }
+        const run = await chatWorkflow.createRunAsync();
+        const result = await run.start({
+          inputData: {
+            prompt,
+            temperature,
+            maxTokens,
+            systemPrompt,
+            additionalContext,
+            resourceId,
+            threadId,
+          },
+        });
+
+        if (result.status !== 'success') {
+          console.error('❌ Workflow failed:', result.status);
+          throw new Error(`Workflow failed: ${result.status}`);
+        }
+
+        console.log('✅ Chat workflow completed successfully');
+
+        // Use Mastra's AI SDK v5 compatible streaming
+        const streamResult = result.result?.streamResult;
+        if (streamResult && streamResult.aisdk?.v5?.toUIMessageStreamResponse) {
+          console.log('📡 Returning AI SDK v5 compatible stream response');
+          return streamResult.aisdk.v5.toUIMessageStreamResponse();
+        }
+
+        // Fallback to non-streaming response
+        console.log('⚠️ No stream result found, returning static response');
+        return c.json({
+          content: result.result?.content || 'No response generated',
+          usage: result.result?.usage || {},
         });
       } catch (error) {
-        console.error(error);
+        console.error('❌ Legacy API Error:', error);
         return c.json({ error: error instanceof Error ? error.message : 'Internal error' }, 500);
       }
     },
