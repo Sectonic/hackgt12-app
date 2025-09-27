@@ -14,10 +14,10 @@ const queryClient = new QueryClient();
 
 // Configure Cedar provider
 const cedarConfig = {
-  apiUrl: '/api',
+  apiUrl: 'http://localhost:4114',
   endpoints: {
-    chat: '/chat',
-    chatStream: '/chat/stream',
+    chat: '/api/agents/agentCreatePlan',
+    chatStream: '/api/agents/agentCreatePlan/stream',
   },
 };
 
