@@ -445,262 +445,309 @@ Return only valid JSON.`;
       rooms: [
         {
           id: 'room-1',
-          name: 'Master Bedroom',
+          name: 'Bedroom A',
           type: 'bedroom',
           level: '1',
-          area: 18.5,
+          area: 17.20,
           polygon: [
             { x: 0, y: 0 },
-            { x: 5, y: 0 },
-            { x: 5, y: 3.7 },
-            { x: 0, y: 3.7 }
+            { x: 4.3, y: 0 },
+            { x: 4.3, y: 4.0 },
+            { x: 0, y: 4.0 }
           ],
-          centroid: { x: 2.5, y: 1.85 }
+          centroid: { x: 2.15, y: 2.0 }
         },
         {
           id: 'room-2',
-          name: 'Bedroom 2',
+          name: 'Bedroom B',
           type: 'bedroom',
           level: '1',
-          area: 15.2,
+          area: 17.20,
           polygon: [
-            { x: 5, y: 0 },
-            { x: 8.5, y: 0 },
-            { x: 8.5, y: 3.2 },
-            { x: 5, y: 3.2 }
+            { x: 4.3, y: 0 },
+            { x: 8.6, y: 0 },
+            { x: 8.6, y: 4.0 },
+            { x: 4.3, y: 4.0 }
           ],
-          centroid: { x: 6.75, y: 1.6 }
+          centroid: { x: 6.45, y: 2.0 }
         },
         {
           id: 'room-3',
-          name: 'Bedroom 3',
+          name: 'Bedroom C',
           type: 'bedroom',
           level: '1',
-          area: 14.8,
+          area: 17.20,
           polygon: [
-            { x: 8.5, y: 0 },
-            { x: 12, y: 0 },
-            { x: 12, y: 3.2 },
-            { x: 8.5, y: 3.2 }
+            { x: 8.6, y: 0 },
+            { x: 12.9, y: 0 },
+            { x: 12.9, y: 4.0 },
+            { x: 8.6, y: 4.0 }
           ],
-          centroid: { x: 10.25, y: 1.6 }
+          centroid: { x: 10.75, y: 2.0 }
         },
         {
           id: 'room-4',
-          name: 'Bedroom 4',
+          name: 'Bedroom D',
           type: 'bedroom',
           level: '1',
-          area: 16.3,
+          area: 17.20,
           polygon: [
-            { x: 0, y: 3.7 },
-            { x: 4.2, y: 3.7 },
-            { x: 4.2, y: 7.5 },
-            { x: 0, y: 7.5 }
+            { x: 12.9, y: 0 },
+            { x: 17.2, y: 0 },
+            { x: 17.2, y: 4.0 },
+            { x: 12.9, y: 4.0 }
           ],
-          centroid: { x: 2.1, y: 5.6 }
+          centroid: { x: 15.05, y: 2.0 }
         },
         {
           id: 'room-5',
-          name: 'Master Bathroom',
+          name: 'Bathroom A',
           type: 'bathroom',
           level: '1',
-          area: 8.5,
+          area: 5.00,
           polygon: [
-            { x: 4.2, y: 3.7 },
-            { x: 6.8, y: 3.7 },
-            { x: 6.8, y: 5.2 },
-            { x: 4.2, y: 5.2 }
+            { x: 0, y: 4.0 },
+            { x: 2.5, y: 4.0 },
+            { x: 2.5, y: 6.0 },
+            { x: 0, y: 6.0 }
           ],
-          centroid: { x: 5.5, y: 4.45 }
+          centroid: { x: 1.25, y: 5.0 }
         },
         {
           id: 'room-6',
-          name: 'Guest Bathroom',
+          name: 'Bathroom B',
           type: 'bathroom',
           level: '1',
-          area: 6.8,
+          area: 6.00,
           polygon: [
-            { x: 6.8, y: 3.7 },
-            { x: 9.2, y: 3.7 },
-            { x: 9.2, y: 5.2 },
-            { x: 6.8, y: 5.2 }
+            { x: 2.5, y: 4.0 },
+            { x: 5.5, y: 4.0 },
+            { x: 5.5, y: 6.0 },
+            { x: 2.5, y: 6.0 }
           ],
-          centroid: { x: 8, y: 4.45 }
+          centroid: { x: 4.0, y: 5.0 }
         },
         {
           id: 'room-7',
-          name: 'Living Room',
-          type: 'living_room',
+          name: 'Bathroom C',
+          type: 'bathroom',
           level: '1',
-          area: 28.5,
+          area: 5.00,
           polygon: [
-            { x: 4.2, y: 5.2 },
-            { x: 12, y: 5.2 },
-            { x: 12, y: 8.5 },
-            { x: 4.2, y: 8.5 }
+            { x: 5.5, y: 4.0 },
+            { x: 8.0, y: 4.0 },
+            { x: 8.0, y: 6.0 },
+            { x: 5.5, y: 6.0 }
           ],
-          centroid: { x: 8.1, y: 6.85 }
+          centroid: { x: 6.75, y: 5.0 }
         },
         {
           id: 'room-8',
-          name: 'Kitchen',
-          type: 'kitchen',
+          name: 'Living Room',
+          type: 'living_room',
           level: '1',
-          area: 12.8,
+          area: 25.10,
           polygon: [
-            { x: 0, y: 7.5 },
-            { x: 4.2, y: 7.5 },
-            { x: 4.2, y: 10.5 },
-            { x: 0, y: 10.5 }
+            { x: 8.0, y: 4.0 },
+            { x: 17.2, y: 4.0 },
+            { x: 17.2, y: 8.0 },
+            { x: 8.0, y: 8.0 }
           ],
-          centroid: { x: 2.1, y: 9 }
+          centroid: { x: 12.6, y: 6.0 }
         },
         {
           id: 'room-9',
-          name: 'Main Hallway',
-          type: 'hallway',
+          name: 'Kitchen',
+          type: 'kitchen',
           level: '1',
-          area: 8.2,
+          area: 11.20,
           polygon: [
-            { x: 4.2, y: 8.5 },
-            { x: 8, y: 8.5 },
-            { x: 8, y: 10.5 },
-            { x: 4.2, y: 10.5 }
+            { x: 0, y: 6.0 },
+            { x: 8.0, y: 6.0 },
+            { x: 8.0, y: 8.0 },
+            { x: 0, y: 8.0 }
           ],
-          centroid: { x: 6.1, y: 9.5 }
+          centroid: { x: 4.0, y: 7.0 }
         },
         {
           id: 'room-10',
-          name: 'Secondary Hallway',
+          name: 'Hallways',
           type: 'hallway',
           level: '1',
-          area: 6.5,
+          area: 19.00,
           polygon: [
-            { x: 8, y: 8.5 },
-            { x: 12, y: 8.5 },
-            { x: 12, y: 10.5 },
-            { x: 8, y: 10.5 }
+            { x: 0, y: 8.0 },
+            { x: 17.2, y: 8.0 },
+            { x: 17.2, y: 10.0 },
+            { x: 0, y: 10.0 }
           ],
-          centroid: { x: 10, y: 9.5 }
+          centroid: { x: 8.6, y: 9.0 }
+        },
+        {
+          id: 'room-11',
+          name: 'Closets (4 WICs total)',
+          type: 'storage',
+          level: '1',
+          area: 10.00,
+          polygon: [
+            { x: 17.2, y: 0 },
+            { x: 20.0, y: 0 },
+            { x: 20.0, y: 5.0 },
+            { x: 17.2, y: 5.0 }
+          ],
+          centroid: { x: 18.6, y: 2.5 }
+        },
+        {
+          id: 'room-12',
+          name: 'Utility (W/D + WH + Pantry)',
+          type: 'utility',
+          level: '1',
+          area: 5.40,
+          polygon: [
+            { x: 17.2, y: 5.0 },
+            { x: 20.0, y: 5.0 },
+            { x: 20.0, y: 8.0 },
+            { x: 17.2, y: 8.0 }
+          ],
+          centroid: { x: 18.6, y: 6.5 }
         }
       ],
       openings: [
         {
           id: 'opening-1',
           type: 'door',
-          width: 0.9,
-          height: 2.1,
-          position: { x: 2.1, y: 3.7 }
+          width: 0.90,
+          height: 2.10,
+          position: { x: 8.6, y: 8.0 }
         },
         {
           id: 'opening-2',
           type: 'door',
-          width: 0.8,
-          height: 2.1,
-          position: { x: 6.75, y: 3.2 }
+          width: 0.80,
+          height: 2.10,
+          position: { x: 2.15, y: 4.0 }
         },
         {
           id: 'opening-3',
           type: 'door',
-          width: 0.8,
-          height: 2.1,
-          position: { x: 10.25, y: 3.2 }
+          width: 0.80,
+          height: 2.10,
+          position: { x: 6.45, y: 4.0 }
         },
         {
           id: 'opening-4',
           type: 'door',
-          width: 0.9,
-          height: 2.1,
-          position: { x: 2.1, y: 7.5 }
+          width: 0.80,
+          height: 2.10,
+          position: { x: 10.75, y: 4.0 }
         },
         {
           id: 'opening-5',
           type: 'door',
-          width: 0.7,
-          height: 2.1,
-          position: { x: 5.5, y: 5.2 }
+          width: 0.80,
+          height: 2.10,
+          position: { x: 15.05, y: 4.0 }
         },
         {
           id: 'opening-6',
           type: 'door',
-          width: 0.7,
-          height: 2.1,
-          position: { x: 8, y: 5.2 }
+          width: 0.70,
+          height: 2.10,
+          position: { x: 1.25, y: 6.0 }
         },
         {
           id: 'opening-7',
           type: 'door',
-          width: 1.2,
-          height: 2.1,
-          position: { x: 8.1, y: 8.5 }
+          width: 0.70,
+          height: 2.10,
+          position: { x: 4.0, y: 6.0 }
         },
         {
           id: 'opening-8',
           type: 'door',
-          width: 0.8,
-          height: 2.1,
-          position: { x: 2.1, y: 10.5 }
+          width: 0.70,
+          height: 2.10,
+          position: { x: 6.75, y: 6.0 }
         },
         {
           id: 'opening-9',
-          type: 'window',
-          width: 1.2,
-          height: 1.5,
-          position: { x: 0, y: 1.85 }
+          type: 'door',
+          width: 0.80,
+          height: 2.10,
+          position: { x: 4.0, y: 8.0 }
         },
         {
           id: 'opening-10',
+          type: 'door',
+          width: 1.20,
+          height: 2.10,
+          position: { x: 12.6, y: 8.0 }
+        },
+        {
+          id: 'opening-11',
           type: 'window',
-          width: 1.0,
-          height: 1.5,
-          position: { x: 6.75, y: 0 }
+          width: 1.20,
+          height: 1.50,
+          position: { x: 12.6, y: 4.0 }
+        },
+        {
+          id: 'opening-12',
+          type: 'window',
+          width: 1.00,
+          height: 1.50,
+          position: { x: 10.75, y: 0 }
         }
       ],
       annotations: [
         {
           id: 'text-1',
-          text: 'Master Bedroom',
-          position: { x: 2.5, y: 1.85 }
+          text: 'Bedroom A',
+          position: { x: 2.15, y: 2.0 }
         },
         {
           id: 'text-2',
-          text: 'Bedroom 2',
-          position: { x: 6.75, y: 1.6 }
+          text: 'Bedroom B',
+          position: { x: 6.45, y: 2.0 }
         },
         {
           id: 'text-3',
-          text: 'Bedroom 3',
-          position: { x: 10.25, y: 1.6 }
+          text: 'Bedroom C',
+          position: { x: 10.75, y: 2.0 }
         },
         {
           id: 'text-4',
-          text: 'Bedroom 4',
-          position: { x: 2.1, y: 5.6 }
+          text: 'Bedroom D',
+          position: { x: 15.05, y: 2.0 }
         },
         {
           id: 'text-5',
-          text: 'Master Bath',
-          position: { x: 5.5, y: 4.45 }
+          text: 'Bathroom A',
+          position: { x: 1.25, y: 5.0 }
         },
         {
           id: 'text-6',
-          text: 'Guest Bath',
-          position: { x: 8, y: 4.45 }
+          text: 'Bathroom B',
+          position: { x: 4.0, y: 5.0 }
         },
         {
           id: 'text-7',
-          text: 'Living Room',
-          position: { x: 8.1, y: 6.85 }
+          text: 'Bathroom C',
+          position: { x: 6.75, y: 5.0 }
         },
         {
           id: 'text-8',
+          text: 'Living Room',
+          position: { x: 12.6, y: 6.0 }
+        },
+        {
+          id: 'text-9',
           text: 'Kitchen',
-          position: { x: 2.1, y: 9 }
+          position: { x: 4.0, y: 7.0 }
         }
       ],
       metadata: {
-        totalArea: 129.1,
-        roomCount: 10,
+        totalArea: 130.20,
+        roomCount: 12,
         sourceType
       }
     };
