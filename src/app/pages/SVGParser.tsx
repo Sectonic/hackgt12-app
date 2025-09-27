@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import SimpleLLMAnalyzerDemo from '../../svg-parser/SimpleLLMAnalyzerDemo';
+import ChatSVGParser from '@/app/components/ui/ChatSVGParser';
 
 export default function SVGParser() {
-  return <SimpleLLMAnalyzerDemo />;
+  return <ChatSVGParser />;
 }
