@@ -8,12 +8,45 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { supabase } from '@/app/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import Header from '@/app/components/Header';
+import cedarProvider from '@/app/lib/cedar-provider';
 
 const queryClient = new QueryClient();
 
+// Configure Cedar provider
+const cedarConfig = {
+  apiUrl: '/api',
+  endpoints: {
+    chat: '/chat',
+    chatStream: '/chat/stream',
+  },
+};
+
+// Make config available globally for Cedar
+if (typeof window !== 'undefined') {
+  (window as typeof window & { __CEDAR_CONFIG__: typeof cedarConfig }).__CEDAR_CONFIG__ =
+    cedarConfig;
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Initialize Cedar provider
+    if (typeof window !== 'undefined') {
+      (
+        window as typeof window & {
+          __CEDAR_PROVIDER__: typeof cedarProvider;
+          __CEDAR_CONFIG__: typeof cedarConfig;
+        }
+      ).__CEDAR_PROVIDER__ = cedarProvider;
+      (
+        window as typeof window & {
+          __CEDAR_PROVIDER__: typeof cedarProvider;
+          __CEDAR_CONFIG__: typeof cedarConfig;
+        }
+      ).__CEDAR_CONFIG__ = cedarConfig;
+    }
+  }, []);
 
   useEffect(() => {
     // Set up auth state listener
@@ -21,13 +54,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-      setLoading(false);
     });
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();

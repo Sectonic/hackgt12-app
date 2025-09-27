@@ -15,6 +15,7 @@ import Editor from '@/app/pages/Editor';
 import ShareView from '@/app/pages/ShareView';
 import SVGParser from '@/app/pages/SVGParser';
 import NotFound from '@/app/pages/NotFound';
+import ChatTestPage from '@/app/chat-test/page';
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ export default function HomePage() {
                 path="/plans/:id/editor"
                 element={user ? <Editor user={user} /> : <Navigate to="/auth" replace />}
               />
+              <Route path="/chat-test" element={<ChatTestPage />} />
               <Route path="/svg-parser" element={<SVGParser />} />
               <Route path="/s/:token" element={<ShareView />} />
               <Route path="*" element={<NotFound />} />
