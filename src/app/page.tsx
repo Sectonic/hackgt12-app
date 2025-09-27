@@ -13,6 +13,7 @@ import Auth from '@/app/pages/Auth';
 import Plans from '@/app/pages/Plans';
 import Editor from '@/app/pages/Editor';
 import ShareView from '@/app/pages/ShareView';
+import SVGParser from '@/app/pages/SVGParser';
 import NotFound from '@/app/pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ export default function HomePage() {
                 path="/plans/:id/editor"
                 element={user ? <Editor user={user} /> : <Navigate to="/auth" replace />}
               />
+              <Route path="/svg-parser" element={<SVGParser />} />
               <Route path="/s/:token" element={<ShareView />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -67,6 +67,9 @@ export default function Header({ user }: HeaderProps) {
               <Button variant={isOnPlansPage ? 'secondary' : 'ghost'} size="sm" asChild>
                 <Link to="/plans">Plans</Link>
               </Button>
+              <Button variant={location.pathname === '/svg-parser' ? 'secondary' : 'ghost'} size="sm" asChild>
+                <Link to="/svg-parser">SVG Parser</Link>
+              </Button>
             </nav>
           )}
         </div>
