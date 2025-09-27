@@ -81,6 +81,15 @@ export const SidePanelCedarChat: React.FC<SidePanelCedarChatProps> = ({
     }
   };
 
+  const cleanText = (text: string) => {
+    // Clean up the text by fixing common streaming issues
+    return text
+      .replace(/([.!?])([A-Z])/g, '$1 $2') // Add space after sentence endings
+      .replace(/([a-z])([A-Z])/g, '$1 $2') // Add space between camelCase
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .trim();
+  };
+
   const handleFileUpload = async (file: File) => {
     const fileType = detectFileType(file);
     setUploadedFile(file);
@@ -160,12 +169,25 @@ export const SidePanelCedarChat: React.FC<SidePanelCedarChatProps> = ({
           if (line.startsWith('data:')) {
             const payload = line.slice(5).trim();
             if (!payload) continue;
-            // Unescape newline encoding used in SSE
-            const delta = payload.replace(/\\n/g, '\n');
+            
+            // Process the text properly
+            let delta = payload;
+            
+            // Handle escaped characters
+            delta = delta.replace(/\\n/g, '\n');
+            delta = delta.replace(/\\t/g, '\t');
+            delta = delta.replace(/\\"/g, '"');
+            delta = delta.replace(/\\\\/g, '\\');
+            
             setMessages((prev) => {
               const copy = [...prev];
               const idx = assistantIndex! - 1; // last pushed index
               if (copy[idx] && copy[idx].role === 'assistant') {
+                // Add proper spacing between words if needed
+                if (delta && !delta.match(/^[\s\n]/) && copy[idx].content && !copy[idx].content.endsWith(' ') && !copy[idx].content.endsWith('\n')) {
+                  delta = ' ' + delta;
+                }
+                
                 copy[idx] = {
                   role: 'assistant',
                   content: copy[idx].content + delta,
@@ -240,8 +262,8 @@ export const SidePanelCedarChat: React.FC<SidePanelCedarChatProps> = ({
                         : 'mr-auto max-w-[80%] rounded-lg bg-gray-100 dark:bg-gray-800 text-foreground px-3 py-2'
                     }
                   >
-                    <div className="whitespace-pre-wrap">
-                      {m.content.split('\n').map((line, lineIndex) => {
+                    <div className="whitespace-pre-wrap break-words">
+                      {cleanText(m.content).split('\n').map((line, lineIndex) => {
                         // Handle markdown formatting
                         const parts = line.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`|#{1,6}\s+.*|^[-*+]\s+.*|^\d+\.\s+.*)/g);
                         return (
