@@ -42,6 +42,11 @@ export default function History<T>({
     setHistory(newHistory);
   }, [history, historyIndex, maxHistorySize]);
 
+  const resetHistory = useCallback((state: T) => {
+    setHistory([state]);
+    setHistoryIndex(0);
+  }, []);
+
   const undo = useCallback(() => {
     if (historyIndex > 0) {
       setHistoryIndex(historyIndex - 1);
@@ -78,6 +83,7 @@ export default function History<T>({
 
   return {
     addToHistory,
+    resetHistory,
     undo,
     redo,
     canUndo,

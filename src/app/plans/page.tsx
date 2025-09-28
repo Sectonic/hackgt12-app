@@ -3,14 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowRight, Clock, FileText, Plus } from 'lucide-react';
+import { ArrowRight, Clock, FileText, Loader2, Plus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 import { useToast } from '@/app/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
 import { supabase } from '@/lib/supabase/client';
-import type { Database } from '@/lib/supabase/types';
+import type { Database, Json } from '@/lib/supabase/types';
 import { useCedarStore } from 'cedar-os';
+import { createInitialPlanSnapshot } from '@/app/plans/[planId]/types';
 
 const EMPTY_STATE = {
   title: 'No plans yet',
@@ -41,10 +42,56 @@ export default function PlansPage() {
   const [sharedPlans, setSharedPlans] = useState<Plan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
   const [plansError, setPlansError] = useState<string | null>(null);
+  const [creatingPlan, setCreatingPlan] = useState(false);
 
-  const handleCreatePlan = () => {
+  const handleCreatePlan = useCallback(async () => {
+    if (creatingPlan) return;
+    if (!user) {
+      router.replace('/auth');
+      return;
+    }
+
     setShowChat(true);
-  };
+    setCreatingPlan(true);
+
+    try {
+      const now = new Date().toISOString();
+      const { data: planRecord, error: planError } = await supabase
+        .from('plans')
+        .insert({
+          owner_id: user.id,
+          title: 'Untitled plan',
+          updated_at: now,
+        })
+        .select('id')
+        .single();
+
+      if (planError) throw planError;
+      if (!planRecord) throw new Error('Plan could not be created.');
+
+      const initialSnapshot = createInitialPlanSnapshot();
+      const { error: revisionError } = await supabase
+        .from('plan_revisions')
+        .insert({
+          plan_id: planRecord.id,
+          user_id: user.id,
+          snapshot: initialSnapshot as Json,
+        });
+
+      if (revisionError) throw revisionError;
+
+      router.push(`/plans/${planRecord.id}`);
+    } catch (creationError) {
+      const message =
+        creationError instanceof Error ? creationError.message : 'Unable to create a new plan.';
+      toast({
+        variant: 'destructive',
+        title: 'Could not create plan',
+        description: message,
+      });
+    }
+    setCreatingPlan(false);
+  }, [creatingPlan, router, setShowChat, toast, user]);
 
   const fetchPlans = useCallback(async () => {
     if (!user) return;
@@ -158,10 +205,15 @@ export default function PlansPage() {
             <button
               type="button"
               onClick={handleCreatePlan}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={creatingPlan}
             >
-              <Plus className="h-4 w-4" />
-              New plan
+              {creatingPlan ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+              {creatingPlan ? 'Creating…' : 'New plan'}
             </button>
           </div>
         </div>
@@ -207,7 +259,7 @@ export default function PlansPage() {
                 {activePlans.map((plan) => (
                   <Link
                     key={plan.id}
-                    href={`/plans/${plan.id}/editor`}
+                    href={`/plans/${plan.id}`}
                     className="group flex h-full flex-col justify-between rounded-2xl border border-border bg-background p-6 shadow-sm transition hover:-translate-y-1 hover:border-primary hover:shadow-lg"
                   >
                     <div className="flex items-start justify-between gap-4">
@@ -239,7 +291,7 @@ export default function PlansPage() {
             ) : activeTab === 'shared' ? (
               <EmptyState {...SHARED_EMPTY_STATE} />
             ) : (
-              <EmptyState {...EMPTY_STATE} onCta={handleCreatePlan} />
+              <EmptyState {...EMPTY_STATE} onCta={handleCreatePlan} ctaDisabled={creatingPlan} />
             )}
           </section>
         </div>
@@ -253,9 +305,10 @@ type EmptyStateProps = {
   description: string;
   cta?: string;
   onCta?: () => void;
+  ctaDisabled?: boolean;
 };
 
-function EmptyState({ title, description, cta, onCta }: EmptyStateProps) {
+function EmptyState({ title, description, cta, onCta, ctaDisabled }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border p-10 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
@@ -267,7 +320,8 @@ function EmptyState({ title, description, cta, onCta }: EmptyStateProps) {
         <button
           type="button"
           onClick={onCta}
-          className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+          disabled={ctaDisabled}
+          className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
         >
           <Plus className="h-4 w-4" />
           {cta}

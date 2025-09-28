@@ -50,7 +50,55 @@ export default function Header({ user: userProp }: HeaderProps = {}) {
   };
 
   const isOnPlansPage = pathname?.startsWith('/plans');
-  const isOnEditorPage = pathname?.includes('/editor');
+
+  if (isOnPlansPage) {
+    return (
+      <div className='fixed top-5 right-5 z-50'>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {user.email?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    <p className="font-medium">{user.email}</p>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer">
+                  <User2 className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {isSigningOut ? 'Signing out...' : 'Sign out'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button asChild>
+              <Link href="/auth">Sign In</Link>
+            </Button>
+          )}
+      </div>
+    )
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md supports-backdrop-blur:bg-background/80 shadow-sm">
