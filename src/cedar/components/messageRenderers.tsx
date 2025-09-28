@@ -16,6 +16,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useApplyPlan } from '@/hooks/useApplyPlan';
 
 // ------------------------------------------------
 // Animation Variants
@@ -165,6 +166,8 @@ export const floorPlanTodoMessageRenderer: MessageRenderer<Message> = {
   render: (message: any) => {
     const data = message.payload;
 
+    const applyPlan = useApplyPlan();
+
     if (!data?.todoList) {
       return null;
     }
@@ -250,6 +253,14 @@ export const floorPlanTodoMessageRenderer: MessageRenderer<Message> = {
         {/* Action Buttons */}
         <motion.div variants={itemVariants}>
           <div className="flex gap-2 pt-2">
+            <Button
+              variant="default"
+              size="sm"
+              className="flex items-center gap-2 text-xs"
+              onClick={() => applyPlan(data)}
+            >
+              Apply Plan
+            </Button>
             <Button
               variant="outline"
               size="sm"

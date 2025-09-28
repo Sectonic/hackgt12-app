@@ -360,6 +360,13 @@ const generatePlanStructure = createStep({
   },
 });
 
+const SanitizedTodoItemSchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  priority: z.enum(['high', 'medium', 'low']),
+  category: z.enum(['measurement', 'design', 'documentation', 'review']),
+});
+
 const buildCanvasInstructions = createStep({
   id: 'buildCanvasInstructions',
   description: 'Convert the structured plan into ordered canvas instruction JSON',
@@ -374,9 +381,6 @@ const buildCanvasInstructions = createStep({
       structuredPlanEmitted = false,
       content,
       usage,
-      projectType,
-      roomCount,
-      specialRequirements,
     } = inputData;
 
     if (requirementStatus !== 'complete') {
@@ -385,60 +389,61 @@ const buildCanvasInstructions = createStep({
         : 'I still need a bit more information before we can create the floor plan.';
 
       return {
-        content: reminder,
+        content: JSON.stringify({ todoList: [] }, null, 2),
         usage,
-        structuredPlan: undefined,
+        structuredPlan: { todoList: [] },
         structuredPlanEmitted: false,
       } satisfies PlanWorkflowOutput;
     }
 
     if (!structuredPlan || !structuredPlan.todoList || structuredPlan.todoList.length === 0) {
-      const message =
-        content && content.trim().length > 0
-          ? content
-          : 'I was not able to extract a structured plan yet. Please provide more detail.';
-
       return {
-        content: message,
+        content: JSON.stringify({ todoList: [] }, null, 2),
         usage,
-        structuredPlan,
+        structuredPlan: { todoList: [] },
         structuredPlanEmitted: false,
       } satisfies PlanWorkflowOutput;
     }
 
-    const steps: CanvasInstruction[] = structuredPlan.todoList.map((item, index) => ({
-      step: index + 1,
-      taskId: item.id,
-      description: item.description,
-      priority: item.priority ?? 'medium',
-      category: item.category ?? 'design',
-    }));
+    const sanitizedTodoList = structuredPlan.todoList.map((item, index) => {
+      const parsed = SanitizedTodoItemSchema.safeParse({
+        id: item.id || `todo-${(index + 1).toString().padStart(2, '0')}`,
+        description: item.description,
+        priority: item.priority ?? 'medium',
+        category: item.category ?? 'design',
+      });
 
-    const instructionsPayload = {
-      steps,
-      metadata: {
-        projectType: structuredPlan.projectType ?? projectType,
-        roomCount: structuredPlan.roomCount ?? roomCount,
-        specialRequirements: structuredPlan.specialRequirements ?? specialRequirements ?? [],
-      },
+      if (!parsed.success) {
+        return {
+          id: `todo-${(index + 1).toString().padStart(2, '0')}`,
+          description: item.description ?? `Task ${index + 1}`,
+          priority: 'medium' as const,
+          category: 'design' as const,
+        } satisfies z.infer<typeof SanitizedTodoItemSchema>;
+      }
+
+      return parsed.data;
+    });
+
+    const payload = {
+      todoList: sanitizedTodoList,
+    } satisfies {
+      todoList: z.infer<typeof SanitizedTodoItemSchema>[];
     };
 
     if (streamController) {
       streamJSONEvent(streamController, {
-        type: 'plan-canvas-steps',
-        payload: instructionsPayload,
+        type: 'plan-todo-list',
+        payload,
       });
     }
 
-    const summary =
-      content && content.length > 0
-        ? content
-        : 'I prepared the plan steps you can execute on the canvas. Let me know if you need adjustments.';
+    const jsonContent = JSON.stringify(payload, null, 2);
 
     return {
-      content: summary,
+      content: jsonContent,
       usage,
-      structuredPlan,
+      structuredPlan: { todoList: sanitizedTodoList },
       structuredPlanEmitted: structuredPlanEmitted || true,
     } satisfies PlanWorkflowOutput;
   },
