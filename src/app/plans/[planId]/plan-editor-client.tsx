@@ -50,22 +50,7 @@ export default function PlanEditorClient({ planId, editor }: PlanEditorClientPro
           return;
         }
 
-        if (planRecord.owner_id === user.id) {
-          if (!isActive) return;
-          setPlan(planRecord);
-          return;
-        }
-
-        const { data: membership, error: membershipError } = await supabase
-          .from('plan_members')
-          .select('id')
-          .eq('plan_id', planId)
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (membershipError) throw membershipError;
-
-        if (!membership) {
+        if (planRecord.owner_id !== user.id) {
           const { error: joinError } = await supabase
             .from('plan_members')
             .upsert(
@@ -80,11 +65,7 @@ export default function PlanEditorClient({ planId, editor }: PlanEditorClientPro
               },
             );
 
-          if (joinError) {
-            if (!isActive) return;
-            setError('You do not have access to this plan.');
-            return;
-          }
+          if (joinError) throw joinError;
         }
 
         if (!isActive) return;
