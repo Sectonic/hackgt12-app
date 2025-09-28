@@ -1,5 +1,6 @@
 import React from 'react';
 import { Stage, Layer, Line, Circle, Group, Rect } from 'react-konva';
+import type { Stage as KonvaStage } from 'konva/lib/Stage';
 import { PlacedIcon } from '@/app/plans/[planId]/IconComponents';
 import {
   PlacedEntity,
@@ -63,31 +64,34 @@ interface KonvaCanvasProps {
   onContextMenu: (e: any) => void;
 }
 
-export default function KonvaCanvas({
-  width,
-  height,
-  scale,
-  position,
-  placedEntities,
-  rooms,
-  selectedItems,
-  itemValidityMap,
-  snapGuides,
-  wallStartPoint,
-  snappedPosition,
-  currentItem,
-  isRoomToolActive,
-  roomToolMode,
-  activeRoomId,
-  roomBuilderState,
-  roomColorMap,
-  onWheel,
-  onMouseMove,
-  onMouseDown,
-  onMouseUp,
-  onClick,
-  onContextMenu
-}: KonvaCanvasProps) {
+const KonvaCanvas = React.forwardRef<KonvaStage, KonvaCanvasProps>(function KonvaCanvas(
+  {
+    width,
+    height,
+    scale,
+    position,
+    placedEntities,
+    rooms,
+    selectedItems,
+    itemValidityMap,
+    snapGuides,
+    wallStartPoint,
+    snappedPosition,
+    currentItem,
+    isRoomToolActive,
+    roomToolMode,
+    activeRoomId,
+    roomBuilderState,
+    roomColorMap,
+    onWheel,
+    onMouseMove,
+    onMouseDown,
+    onMouseUp,
+    onClick,
+    onContextMenu,
+  }: KonvaCanvasProps,
+  stageRef,
+) {
 
   const [floorPatternImages, setFloorPatternImages] = React.useState<Record<FlooringType, HTMLImageElement | null>>({
     floor_tile: null,
@@ -228,6 +232,7 @@ export default function KonvaCanvas({
   return (
     <div className="grid-background">
       <Stage
+        ref={stageRef}
         width={width}
         height={height}
         scaleX={scale}
@@ -473,4 +478,8 @@ export default function KonvaCanvas({
       </Stage>
     </div>
   );
-}
+});
+
+KonvaCanvas.displayName = 'KonvaCanvas';
+
+export default KonvaCanvas;

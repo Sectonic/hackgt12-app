@@ -39,7 +39,7 @@ export default function HomePage() {
               <Layers className="h-20 w-20 text-primary drop-shadow-lg" />
               <div className="absolute -inset-2 rounded-full bg-primary/5 blur-xl" />
             </div>
-            <h1 className="text-7xl font-bold tracking-tight text-foreground">LayOut</h1>
+            <h1 className="text-7xl font-bold tracking-tight text-foreground">Layout AI</h1>
           </div>
           <p className="max-w-3xl text-2xl leading-relaxed text-muted-foreground">
             Professional floor plan editor with AI-powered design assistance. Create, collaborate, and share architectural layouts with precision.
@@ -65,7 +65,7 @@ export default function HomePage() {
 
         <div className="flex items-center gap-4">
           <Button size="lg" asChild className="bg-primary hover:bg-primary/90">
-            <Link href="/auth" className="flex items-center gap-2">
+            <Link href="/auth" className="cursor-pointer flex items-center gap-2">
               <span>Get Started</span>
               <ArrowRight className="h-4 w-4" />
             </Link>

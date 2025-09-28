@@ -66,9 +66,25 @@ export default function PlanEditorClient({ planId, editor }: PlanEditorClientPro
         if (membershipError) throw membershipError;
 
         if (!membership) {
-          if (!isActive) return;
-          setError('You do not have access to this plan.');
-          return;
+          const { error: joinError } = await supabase
+            .from('plan_members')
+            .upsert(
+              {
+                plan_id: planId,
+                user_id: user.id,
+                role: 'editor',
+              },
+              {
+                onConflict: 'plan_id,user_id',
+                ignoreDuplicates: true,
+              },
+            );
+
+          if (joinError) {
+            if (!isActive) return;
+            setError('You do not have access to this plan.');
+            return;
+          }
         }
 
         if (!isActive) return;

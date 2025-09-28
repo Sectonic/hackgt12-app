@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
+import type { Stage as KonvaStage } from 'konva/lib/Stage';
 import { useWindow } from '@/hooks/useWindow';
 import { useZoom } from '@/hooks/useZoom';
 import Toolbar, { ToolType } from './toolBar';
@@ -135,6 +136,9 @@ export default function Editor({ planId, items }: EditorProps) {
   const lastRevisionIdRef = useRef<string | null>(null);
   const latestRequestedSerializedRef = useRef<string | null>(null);
   const pendingRevisionIdsRef = useRef<Set<string>>(new Set());
+  const stageRef = useRef<KonvaStage | null>(null);
+  const previewUploadInFlightRef = useRef(false);
+  const lastUploadedSerializedRef = useRef<string | null>(null);
 
   const initialEntities = useMemo(
     () => assignEntitiesToRooms([], roomDefinitions),
@@ -264,6 +268,147 @@ export default function Editor({ planId, items }: EditorProps) {
     };
   }, [applySnapshot, planId]);
 
+  // Calculate bounds of all placed entities for cropping
+  const calculateEntityBounds = useCallback(
+    (entities: PlacedEntity[], stageWidth: number, stageHeight: number) => {
+      if (entities.length === 0) {
+        return null;
+      }
+
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+
+      entities.forEach((entity) => {
+        if (entity.type === 'wall') {
+          const wall = entity as WallItem;
+          minX = Math.min(minX, wall.startX, wall.endX);
+          minY = Math.min(minY, wall.startY, wall.endY);
+          maxX = Math.max(maxX, wall.startX, wall.endX);
+          maxY = Math.max(maxY, wall.startY, wall.endY);
+        } else {
+          const item = entity as PlacedItem;
+          const scaledWidth = item.width * item.scale;
+          const scaledHeight = item.height * item.scale;
+
+          // Account for rotation by using bounding box
+          const halfWidth = scaledWidth / 2;
+          const halfHeight = scaledHeight / 2;
+
+          minX = Math.min(minX, item.x - halfWidth);
+          minY = Math.min(minY, item.y - halfHeight);
+          maxX = Math.max(maxX, item.x + halfWidth);
+          maxY = Math.max(maxY, item.y + halfHeight);
+        }
+      });
+
+      const rawWidth = Math.max(1, maxX - minX);
+      const rawHeight = Math.max(1, maxY - minY);
+
+      // Expand the frame to include more of the surrounding plan
+      const marginX = Math.max(rawWidth * 0.5, 250);
+      const marginY = Math.max(rawHeight * 0.5, 250);
+
+      const paddedMinX = Math.max(0, minX - marginX);
+      const paddedMinY = Math.max(0, minY - marginY);
+
+      const maxWidth = Math.max(1, stageWidth - paddedMinX);
+      const maxHeight = Math.max(1, stageHeight - paddedMinY);
+
+      const paddedWidth = Math.min(maxWidth, rawWidth + marginX * 2);
+      const paddedHeight = Math.min(maxHeight, rawHeight + marginY * 2);
+
+      return {
+        x: paddedMinX,
+        y: paddedMinY,
+        width: paddedWidth,
+        height: paddedHeight,
+      };
+    },
+    []
+  );
+
+  const uploadPlanPreview = useCallback(
+    async (serializedSnapshot: string): Promise<string | null> => {
+      if (typeof window === 'undefined') {
+        return null;
+      }
+
+      if (!user) {
+        return null;
+      }
+
+      if (previewUploadInFlightRef.current) {
+        return null;
+      }
+
+      if (lastUploadedSerializedRef.current === serializedSnapshot) {
+        return null;
+      }
+
+      const stage = stageRef.current;
+      if (!stage) {
+        return null;
+      }
+
+      previewUploadInFlightRef.current = true;
+
+      try {
+        // Calculate bounds of placed entities for cropping
+        const stageWidth = stage.width();
+        const stageHeight = stage.height();
+        const bounds = calculateEntityBounds(placedEntities, stageWidth, stageHeight);
+        
+        let dataUrl: string;
+        if (bounds) {
+          // Crop to entity bounds
+          dataUrl = stage.toDataURL({
+            pixelRatio: 2,
+            x: bounds.x,
+            y: bounds.y,
+            width: bounds.width,
+            height: bounds.height,
+          });
+        } else {
+          // No entities, use full stage
+          dataUrl = stage.toDataURL({ pixelRatio: 2 });
+        }
+
+        if (!dataUrl) {
+          return null;
+        }
+
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        const filePath = `previews/${planId}.png`;
+        const storage = supabase.storage.from('plans');
+
+        const { error: uploadError } = await storage.upload(filePath, blob, {
+          cacheControl: '3600',
+          contentType: 'image/png',
+          upsert: true,
+        });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data: publicData } = storage.getPublicUrl(filePath);
+
+        lastUploadedSerializedRef.current = serializedSnapshot;
+
+        return publicData?.publicUrl ?? null;
+      } catch (previewError) {
+        console.error('Failed to upload plan preview', previewError);
+        return null;
+      } finally {
+        previewUploadInFlightRef.current = false;
+      }
+    },
+    [planId, user, calculateEntityBounds, placedEntities]
+  );
+
   const persistSnapshot = useCallback(
     async (snapshot: PlanSnapshot, serialized: string) => {
       if (!user) return;
@@ -296,13 +441,18 @@ export default function Editor({ planId, items }: EditorProps) {
           setHasPendingSave(false);
         }
 
+        // Update plan timestamp
+        const updates: Database['public']['Tables']['plans']['Update'] = {
+          updated_at: new Date().toISOString(),
+        };
+
         const { error: planUpdateError } = await supabase
           .from('plans')
-          .update({ updated_at: new Date().toISOString() })
+          .update(updates)
           .eq('id', planId);
 
         if (planUpdateError) {
-          console.warn('Failed to update plan timestamp', planUpdateError);
+          console.warn('Failed to update plan details', planUpdateError);
         }
       } catch (saveError) {
         const message = saveError instanceof Error ? saveError.message : 'Unable to save changes.';
@@ -318,6 +468,47 @@ export default function Editor({ planId, items }: EditorProps) {
     },
     [planId, setHasPendingSave, toast, user]
   );
+
+  const savePlanPreview = useCallback(
+    async (serialized: string) => {
+      if (!user) return;
+
+      try {
+        const previewUrl = await uploadPlanPreview(serialized);
+
+        if (previewUrl) {
+          const updates: Database['public']['Tables']['plans']['Update'] = {
+            image_url: previewUrl,
+          };
+
+          const { error: planUpdateError } = await supabase
+            .from('plans')
+            .update(updates)
+            .eq('id', planId);
+
+          if (planUpdateError) {
+            console.error('Failed to update plan preview', planUpdateError);
+          }
+        }
+      } catch (previewError) {
+        console.error('Failed to save plan preview', previewError);
+      }
+    },
+    [planId, uploadPlanPreview, user]
+  );
+
+  useEffect(() => {
+    return () => {
+      const serialized = JSON.stringify({
+        placedEntities,
+        roomDefinitions,
+      });
+      
+      if (placedEntities.length > 0) {
+        savePlanPreview(serialized);
+      }
+    };
+  }, [placedEntities, roomDefinitions, savePlanPreview]);
 
   useEffect(() => {
     if (!isSnapshotReady || !user) {
@@ -602,6 +793,27 @@ export default function Editor({ planId, items }: EditorProps) {
     }
   };
 
+  const handleDeleteSelectedItems = () => {
+    if (!editingManager.isEditing || editingState.selectedItems.length === 0) {
+      return;
+    }
+
+    const selectedIds = new Set(editingState.selectedItems.map((item) => item.id));
+    const remainingEntities = placedEntities.filter((entity) => !selectedIds.has(entity.id));
+
+    // Avoid unnecessary state updates when nothing was removed
+    if (remainingEntities.length === placedEntities.length) {
+      return;
+    }
+
+    const normalizedEntities = assignEntitiesToRooms(remainingEntities, roomDefinitions);
+
+    addToHistory(normalizedEntities);
+    setSnapGuides({});
+    setSnappedPosition(null);
+    editingManager.reset();
+  };
+
   const handleSave = () => {
     const savedState = editingManager.save();
     if (savedState) {
@@ -634,9 +846,26 @@ export default function Editor({ planId, items }: EditorProps) {
       const snapResult = snapManager.getSnappedPosition(stageX, stageY, currentItem, placedEntities);
       
       setSnappedPosition({ x: snapResult.x, y: snapResult.y });
-      
-      const canPlace = canPlaceOnWall(currentItem, snapResult.x, snapResult.y, placedEntities);
-      setCanPlaceAtPosition(canPlace);
+
+      const previewItem: PlacedItem = {
+        id: 'preview-item',
+        file: currentItem.file,
+        type: currentItem.type,
+        subtype: currentItem.subtype,
+        name: currentItem.name,
+        width: currentItem.width,
+        height: currentItem.height,
+        inverted: currentItem.inverted,
+        rotation: currentItem.rotation,
+        scale: currentItem.scale,
+        x: snapResult.x,
+        y: snapResult.y,
+        roomId: NOT_IN_ROOM_ID
+      };
+
+      const attachesToWall = canPlaceOnWall(currentItem, previewItem.x, previewItem.y, placedEntities);
+      const overlapsEntities = CollisionManager.checkItemCollisions(previewItem, placedEntities);
+      setCanPlaceAtPosition(attachesToWall && !overlapsEntities);
       
       const guides: { x?: number; y?: number } = {};
       if (snapResult.snappedX && snapResult.snapLineX !== undefined) guides.x = snapResult.snapLineX;
@@ -955,6 +1184,7 @@ export default function Editor({ planId, items }: EditorProps) {
                   isEditingMode={editingManager.isEditing}
                   onSaveEdit={handleSave}
                   onCancelEdit={handleCancel}
+                  onDeleteSelectedItems={handleDeleteSelectedItems}
                   hasValidPlacement={editingManager.canSave}
                   screenCursorPos={screenCursorPos}
                   stageScale={scale}
@@ -1005,6 +1235,7 @@ export default function Editor({ planId, items }: EditorProps) {
             builderIsValid={builderIsValid}
         />
         <KonvaCanvas
+          ref={stageRef}
           width={innerWidth}
           height={innerHeight}
           scale={scale}

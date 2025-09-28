@@ -11,7 +11,7 @@ import {
 } from '@/app/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/app/components/ui/avatar';
 import { useToast } from '@/app/hooks/use-toast';
-import { Layers, LogOut, Settings, User2 } from 'lucide-react';
+import { FileText, Layers, LogOut, Settings, Share2, User2 } from 'lucide-react';
 
 import { useAuth } from '@/context/auth-context';
 import { supabase } from '@/lib/supabase/client';
@@ -27,6 +27,46 @@ export default function Header({ user: userProp }: HeaderProps = {}) {
   const pathname = usePathname();
   const { toast } = useToast();
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const handleShareLink = async () => {
+    try {
+      if (typeof window === 'undefined') {
+        throw new Error('Clipboard is unavailable in this environment.');
+      }
+
+      const shareUrl = window.location.href;
+
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = shareUrl;
+        textArea.setAttribute('readonly', '');
+        textArea.style.position = 'absolute';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        try {
+          textArea.select();
+          document.execCommand('copy');
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
+
+      toast({
+        title: 'Link copied',
+        description: 'Share this page with collaborators.',
+      });
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Unable to copy link to clipboard.';
+      toast({
+        variant: 'destructive',
+        title: 'Could not copy link',
+        description: message,
+      });
+    }
+  };
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -49,7 +89,7 @@ export default function Header({ user: userProp }: HeaderProps = {}) {
     }
   };
 
-  const isOnPlansPage = pathname?.startsWith('/plans');
+  const isOnPlansPage = pathname?.match(/^\/plans\/[^\/]+$/);
 
   if (isOnPlansPage) {
     return (
@@ -71,6 +111,17 @@ export default function Header({ user: userProp }: HeaderProps = {}) {
                     <p className="font-medium">{user.email}</p>
                   </div>
                 </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer" onClick={() => void handleShareLink()}>
+                  <Share2 className="mr-2 h-4 w-4" />
+                  Share link
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/plans" className="flex cursor-pointer items-center">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Plans
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer">
                   <User2 className="mr-2 h-4 w-4" />
@@ -102,7 +153,7 @@ export default function Header({ user: userProp }: HeaderProps = {}) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md supports-backdrop-blur:bg-background/80 shadow-sm">
-      <div className="container flex h-16 items-center justify-between px-6">
+      <div className="flex h-16 w-full items-center justify-between px-6">
         <div className="flex items-center space-x-6">
           <Link
             href="/"
@@ -112,7 +163,7 @@ export default function Header({ user: userProp }: HeaderProps = {}) {
               <Layers className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
               <div className="absolute -inset-1 bg-primary/10 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
-            <span className="tracking-tight">LayOut</span>
+            <span className="tracking-tight">Layout AI</span>
           </Link>
         </div>
 
@@ -120,7 +171,7 @@ export default function Header({ user: userProp }: HeaderProps = {}) {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full cursor-pointer">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {user.email?.charAt(0).toUpperCase() || 'U'}

@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthContext } from '@/context/auth-context';
 import { useSupabaseUser } from '@/hooks/useSupabaseUser';
+import { messageRenderers } from '@/cedar/messageRenderers';
 
 const queryClient = new QueryClient();
 
@@ -22,10 +23,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <CedarCopilot
             llmProvider={{
               provider: 'mastra',
-              baseURL: 'http://localhost:4112',
-              chatPath: '/api/plan/stream',
+              baseURL: 'http://localhost:4111',
               apiKey: process.env.NEXT_PUBLIC_MASTRA_API_KEY || 'not-required',
             }}
+            messageRenderers={messageRenderers}
           >
             <Toaster />
             <Sonner />

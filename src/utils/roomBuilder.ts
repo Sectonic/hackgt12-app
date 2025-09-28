@@ -14,7 +14,7 @@ export interface RoomBuilderState {
 
 const NODE_PRECISION = 3;
 const WALL_SELECTION_TOLERANCE = 12;
-const POINT_TOLERANCE = 0.5;
+const POINT_TOLERANCE = 5;
 
 export const ROOM_WALL_TOLERANCE = WALL_SELECTION_TOLERANCE;
 

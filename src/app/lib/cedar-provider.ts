@@ -11,13 +11,13 @@ export interface CedarProvider {
 }
 
 export const cedarProvider: CedarProvider = {
-  apiUrl: 'http://localhost:4112',
+  apiUrl: 'http://localhost:4111',
   endpoints: {
     chat: '/api/plan/stream',
     chatStream: '/api/plan/stream',
   },
   sendMessage: async (message: string, options: any = {}) => {
-    const response = await fetch('http://localhost:4112/api/plan/stream', {
+    const response = await fetch('http://localhost:4111/api/plan/stream', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

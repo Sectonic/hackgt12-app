@@ -18,6 +18,7 @@ interface KeyboardManagerProps {
   isEditingMode: boolean;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
+  onDeleteSelectedItems: () => void;
   hasValidPlacement: boolean;
   screenCursorPos: { x: number; y: number };
   stageScale: number;
@@ -39,6 +40,7 @@ const transformKeyHints: KeyHint[] = [
 const editingKeyHints: KeyHint[] = [
   { key: 'enter', label: 'Save', displayKey: '↵' },
   { key: 'escape', label: 'Cancel', displayKey: 'Esc' },
+  { key: 'delete', label: 'Delete Selected', displayKey: 'Del' },
 ];
 
 const roomKeyHints: KeyHint[] = [
@@ -54,6 +56,7 @@ export default function KeyboardManager({
   isEditingMode,
   onSaveEdit,
   onCancelEdit,
+  onDeleteSelectedItems,
   hasValidPlacement,
   screenCursorPos, 
   stageScale,
@@ -103,6 +106,13 @@ export default function KeyboardManager({
           case 'escape':
             onCancelEdit();
             keyPressed = 'escape';
+            break;
+          case 'delete':
+          case 'backspace':
+            if (selectedItems.length > 0) {
+              onDeleteSelectedItems();
+              keyPressed = 'delete';
+            }
             break;
         }
       }
@@ -212,6 +222,7 @@ export default function KeyboardManager({
     onSelectedItemsChange,
     onSaveEdit,
     onCancelEdit,
+    onDeleteSelectedItems,
     roomShortcutsEnabled,
     onRoomConfirm,
     onRoomCancel

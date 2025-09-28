@@ -94,25 +94,50 @@ export function PreviewIcon({
     transform += ' scaleX(-1)';
   }
   
+  const invalidStyles = isInvalid
+    ? {
+        opacity: 0.35,
+        boxShadow: '0 0 0 3px rgba(239, 68, 68, 0.5)',
+        filter: 'sepia(0.9) hue-rotate(320deg) saturate(3) brightness(0.9)',
+      }
+    : {};
+
   return (
-    <img
-      src={iconPath}
-      alt={file}
-      style={{
-        position: 'fixed',
-        left: x - scaledWidth / 2,
-        top: y - scaledHeight / 2,
-        width: scaledWidth,
-        height: scaledHeight,
-        opacity: isInvalid ? 0.3 : 0.5,
-        pointerEvents: 'none',
-        zIndex: 5,
-        transform,
-        transformOrigin: 'center center',
-        filter: isInvalid ? 'sepia(1) hue-rotate(320deg) saturate(3) brightness(0.8)' : 'none',
-        border: isInvalid ? '2px solid #ef4444' : 'none',
-        borderRadius: '4px',
-      }}
-    />
+    <>
+      <div
+        style={{
+          position: 'fixed',
+          left: x - scaledWidth / 2 - 6,
+          top: y - scaledHeight / 2 - 6,
+          width: scaledWidth + 12,
+          height: scaledHeight + 12,
+          borderRadius: '4px',
+          border: isInvalid ? '2px solid rgba(239, 68, 68, 0.9)' : '2px solid rgba(59, 130, 246, 0.2)',
+          backgroundColor: isInvalid ? 'rgba(239, 68, 68, 0.15)' : 'transparent',
+          pointerEvents: 'none',
+          zIndex: 4,
+          transform,
+          transformOrigin: 'center center',
+        }}
+      />
+      <img
+        src={iconPath}
+        alt={file}
+        style={{
+          position: 'fixed',
+          left: x - scaledWidth / 2,
+          top: y - scaledHeight / 2,
+          width: scaledWidth,
+          height: scaledHeight,
+          opacity: isInvalid ? 0.35 : 0.6,
+          pointerEvents: 'none',
+          zIndex: 5,
+          transform,
+          transformOrigin: 'center center',
+          borderRadius: '4px',
+          ...invalidStyles,
+        }}
+      />
+    </>
   );
 }

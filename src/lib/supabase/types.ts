@@ -81,6 +81,7 @@ export type Database = {
           created_at: string | null;
           id: string;
           is_archived: boolean | null;
+          image_url: string | null;
           owner_id: string;
           title: string;
           updated_at: string | null;
@@ -89,6 +90,7 @@ export type Database = {
           created_at?: string | null;
           id?: string;
           is_archived?: boolean | null;
+          image_url?: string | null;
           owner_id: string;
           title: string;
           updated_at?: string | null;
@@ -97,6 +99,7 @@ export type Database = {
           created_at?: string | null;
           id?: string;
           is_archived?: boolean | null;
+          image_url?: string | null;
           owner_id?: string;
           title?: string;
           updated_at?: string | null;
