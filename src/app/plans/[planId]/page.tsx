@@ -55,16 +55,24 @@ async function getIconFiles(directory: string, type: 'furniture' | 'foundational
                 const svgPath = path.join(fullPath, file);
                 const dimensions = await parseSvgDimensions(svgPath);
                 
-                return {
-                    file: name,
-                    name: name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, ' '),
-                    type,
-                    width: dimensions.width,
-                    height: dimensions.height,
-                    inverted: false,
-                    rotation: 0,
-                    scale: 1
-                };
+                    let subtype: 'door' | 'window' | undefined;
+                    if (name.includes('door')) {
+                        subtype = 'door';
+                    } else if (name.includes('window')) {
+                        subtype = 'window';
+                    }
+                    
+                    return {
+                        file: name,
+                        name: name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, ' '),
+                        type,
+                        subtype,
+                        width: dimensions.width,
+                        height: dimensions.height,
+                        inverted: false,
+                        rotation: 0,
+                        scale: 1
+                    };
             })
         );
         

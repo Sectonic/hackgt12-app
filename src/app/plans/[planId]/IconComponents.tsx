@@ -25,7 +25,7 @@ export function PlacedIcon({
   y, 
   scale = 1, 
   opacity = 1, 
-  draggable = true,
+  draggable = false,
   inverted = false,
   rotation = 0,
   itemScale = 1
@@ -63,10 +63,11 @@ export function PreviewIcon({
   height, 
   x, 
   y, 
-  scale = 1,
-  inverted = false,
+  scale = 1, 
+  inverted = false, 
   rotation = 0,
-  itemScale = 1
+  itemScale = 1,
+  isInvalid = false
 }: { 
   type: 'furniture' | 'foundational'; 
   file: string;
@@ -78,6 +79,7 @@ export function PreviewIcon({
   inverted?: boolean;
   rotation?: number;
   itemScale?: number;
+  isInvalid?: boolean;
 }) {
   const iconPath = type === 'furniture' ? `/icons/furniture/${file}.svg` : `/icons/foundational/${file}.svg`;
   
@@ -102,11 +104,14 @@ export function PreviewIcon({
         top: y - scaledHeight / 2,
         width: scaledWidth,
         height: scaledHeight,
-        opacity: 0.5,
+        opacity: isInvalid ? 0.3 : 0.5,
         pointerEvents: 'none',
         zIndex: 5,
         transform,
         transformOrigin: 'center center',
+        filter: isInvalid ? 'sepia(1) hue-rotate(320deg) saturate(3) brightness(0.8)' : 'none',
+        border: isInvalid ? '2px solid #ef4444' : 'none',
+        borderRadius: '4px',
       }}
     />
   );
