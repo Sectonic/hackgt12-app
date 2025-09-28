@@ -3,9 +3,10 @@ import { NextRequest } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    // Forward the request to the Mastra backend plan streaming endpoint
-    const mastraUrl = process.env.NEXT_PUBLIC_MASTRA_URL || 'http://localhost:4111';
-    const endpointUrl = new URL('/plan/stream', mastraUrl).toString();
+    // Forward the request to the Mastra backend plan creation endpoint
+    const mastraUrl = process.env.NEXT_PUBLIC_MASTRA_URL || 'http://localhost:4111
+    ';
+    const endpointUrl = new URL('/plan/create', mastraUrl).toString();
     const response = await fetch(endpointUrl, {
       method: 'POST',
       headers: {
@@ -18,14 +19,10 @@ export async function POST(request: NextRequest) {
       throw new Error(`Mastra backend responded with status: ${response.status}`);
     }
 
-    // Return the streaming response from Mastra backend
-    return new Response(response.body, {
-      status: response.status,
-      headers: {
-        'Content-Type': response.headers.get('Content-Type') || 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
-      },
+    const result = await response.json();
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error proxying request to Mastra backend:', error);

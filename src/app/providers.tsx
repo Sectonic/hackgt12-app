@@ -15,7 +15,6 @@ const queryClient = new QueryClient();
 export function Providers({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
-
   useEffect(() => {
     // Set up auth state listener
     const {
@@ -38,8 +37,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <CedarCopilot
           llmProvider={{
             provider: 'mastra',
-            baseURL: 'http://localhost:4112',
-            chatPath: '/api/plan/stream',
+            baseURL: '',
+            chatPath: '/api/chat',
+            streamPath: '/api/chat/stream',
+            resumePath: '/api/chat/resume',
             apiKey: process.env.NEXT_PUBLIC_MASTRA_API_KEY || 'not-required',
           }}
         >

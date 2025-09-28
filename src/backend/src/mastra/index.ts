@@ -2,6 +2,7 @@ import { Mastra } from '@mastra/core/mastra';
 import { agentCreatePlan } from './agents/agentCreatePlan';
 import { apiRoutes } from './apiRegistry';
 import { storage } from './memory';
+import { planCreationWorkflow } from './workflows/planCreationWorkflow';
 
 /**
  * Main Mastra configuration
@@ -12,6 +13,7 @@ import { storage } from './memory';
 
 export const mastra = new Mastra({
   agents: { agentCreatePlan },
+  workflows: { planCreationWorkflow },
   storage,
   telemetry: {
     enabled: true,

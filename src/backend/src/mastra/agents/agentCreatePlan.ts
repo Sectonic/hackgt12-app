@@ -1,13 +1,7 @@
 import { openai } from '@ai-sdk/openai';
 import { Agent } from '@mastra/core/agent';
 import { memory } from '../memory';
-
-// Create a simple model configuration that should work
-const modelConfig = {
-  provider: 'openai',
-  model: 'gpt-4o-mini',
-  apiKey: process.env.OPENAI_API_KEY,
-};
+import { ALL_TOOLS } from '../tools/toolDefinitions';
 
 export const agentCreatePlan = new Agent({
   name: 'Floor Planning Assistant',
@@ -44,6 +38,7 @@ When creating a plan, provide both:
 - Consider dependencies between tasks
 - Always explain your reasoning in plain text
 </guidelines>`,
-  model: openai('gpt-4o-mini'),
+  model: openai('gpt-5-chat-latest'),
   memory,
+  tools: ALL_TOOLS,
 });

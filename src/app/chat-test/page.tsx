@@ -1,24 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { SidePanelCedarChat } from '@/cedar/components/chatComponents/SidePanelCedarChat';
 import { EmbeddedCedarChat } from '@/cedar/components/chatComponents/EmbeddedCedarChat';
 import { FloatingCedarChat } from '@/cedar/components/chatComponents/FloatingCedarChat';
 import { ChatModeSelector, ChatMode } from '@/app/components/ChatModeSelector';
-import cedarProvider from '@/app/lib/cedar-provider';
-
 type LocalChatMode = 'floating' | 'sidepanel' | 'embedded';
 
 export default function ChatTestPage() {
   const [chatMode, setChatMode] = useState<LocalChatMode>('sidepanel');
-
-  useEffect(() => {
-    // Initialize Cedar provider
-    if (typeof window !== 'undefined') {
-      (window as typeof window & { __CEDAR_PROVIDER__: typeof cedarProvider }).__CEDAR_PROVIDER__ =
-        cedarProvider;
-    }
-  }, []);
 
   const renderChat = () => {
     switch (chatMode) {
