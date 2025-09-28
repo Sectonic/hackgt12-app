@@ -14,7 +14,7 @@ const queryClient = new QueryClient();
 
 // Configure Cedar provider
 const cedarConfig = {
-  apiUrl: 'http://localhost:4114',
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4114',
   endpoints: {
     chat: '/api/agents/agentCreatePlan',
     chatStream: '/api/agents/agentCreatePlan/stream',
