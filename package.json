@@ -53,6 +53,7 @@
     "fast-xml-parser": "^5.2.5",
     "framer-motion": "^12.23.11",
     "lucide-react": "^0.532.0",
+    "mcp": "^1.4.2",
     "motion": "^12.23.12",
     "motion-plus-react": "^1.5.1",
     "next": "15.4.4",

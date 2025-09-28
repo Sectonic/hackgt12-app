@@ -1,5 +1,5 @@
 # Mastra Backend API URL
-NEXT_PUBLIC_MASTRA_API_URL=http://localhost:4111
+NEXT_PUBLIC_MASTRA_API_URL=http://localhost:4112
 
 # Cedar API Configuration
 NEXT_PUBLIC_CEDAR_API_URL=/api
@@ -9,10 +9,8 @@ NEXT_PUBLIC_CEDAR_CHAT_STREAM_ENDPOINT=/chat/stream
 # OpenAI API Key (required for AI chat functionality)
 # Get your API key from: https://platform.openai.com/api-keys
 # Replace with your actual OpenAI API key
-OPENAI_API_KEY=sk-your-openai-api-key-here
+OPENAI_API_KEY=your_openai_api_key_here
 
-# Alternative: You can also use NEXT_PUBLIC_OPENAI_API_KEY for client-side access
-# NEXT_PUBLIC_OPENAI_API_KEY=sk-your-openai-api-key-here
 
 # Supabase Configuration (if needed)
 # NEXT_PUBLIC_SUPABASE_URL=your_supabase_url

@@ -27,9 +27,9 @@ export async function POST(req: NextRequest) {
     console.log('Floor Plan Assistant received:', prompt);
 
     // Get OpenAI API key from environment
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     
-    if (!OPENAI_API_KEY || OPENAI_API_KEY === 'sk-your-openai-api-key-here') {
+    if (!OPENAI_API_KEY || OPENAI_API_KEY === 'your_openai_api_key_here') {
       // Return a helpful error message instead of throwing
       const errorMessage = `🔑 **API Key Required**
 
@@ -41,7 +41,7 @@ I need a valid OpenAI API key to provide AI assistance. Please:
 
 **Current status**: No valid API key found.
 
-*For development, you can also set \`NEXT_PUBLIC_OPENAI_API_KEY\` in your environment variables.*`;
+*For development, you can also set \`OPENAI_API_KEY\` in your environment variables.*`;
 
       const encoder = new TextEncoder();
       const stream = new ReadableStream({

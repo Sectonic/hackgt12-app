@@ -37,7 +37,7 @@ interface FileUpload {
 
 export default function ChatSVGParser() {
   // Get OpenAI API key from environment or use fallback
-  const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY || '';
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
   
   const isApiKeyConfigured = OPENAI_API_KEY && OPENAI_API_KEY.trim() !== '';
   
@@ -47,7 +47,7 @@ export default function ChatSVGParser() {
     if (isApiKeyConfigured) {
       return baseMessage + "\n\nOpenAI API configured - ready for real AI analysis!";
     } else {
-      return baseMessage + "\n\n**Note**: No OpenAI API key configured. I'll use demo data for analysis. To enable real AI analysis, set the NEXT_PUBLIC_OPENAI_API_KEY environment variable.";
+      return baseMessage + "\n\n**Note**: No OpenAI API key configured. I'll use demo data for analysis. To enable real AI analysis, set the OPENAI_API_KEY environment variable.";
     }
   };
 
@@ -491,7 +491,7 @@ Return only valid JSON.`;
                   <>
                     <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                     <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
-                      Demo mode - set NEXT_PUBLIC_OPENAI_API_KEY for real AI analysis
+                      Demo mode - set OPENAI_API_KEY for real AI analysis
                     </span>
                   </>
                 )}
