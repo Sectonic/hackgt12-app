@@ -34,17 +34,19 @@ export function createSSEStream(
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
     },
   });
 }
 
 /**
  * Emit any JSON object as a data event.
- * Used for actions, tool responses, custom events, etc.
+ * Use this to stream structured data like tool results, progress updates, or custom events.
  */
 export function streamJSONEvent<T>(
   controller: ReadableStreamDefaultController<Uint8Array>,
-  eventType: string,
   eventData: T,
 ) {
   const encoder = new TextEncoder();
@@ -53,22 +55,37 @@ export function streamJSONEvent<T>(
 }
 
 /**
- * Handles streaming of text chunks to SSE controller for Mastra's streamVNext compatibility
- *
- * @param streamResult - The StreamTextResult from an AI agent
- * @param streamController - Optional SSE stream controller
- * @returns Promise<string> - The complete response text
+ * Handles streaming of text chunks using data-only format.
+ * Pass your agent's stream result and the controller to stream text chunks to frontend.
  */
 export async function handleTextStream(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  chunk: string,
+  streamResult: { textStream: AsyncIterable<string> },
   streamController: ReadableStreamDefaultController<Uint8Array>,
 ): Promise<string> {
   const encoder = new TextEncoder();
+  const chunks: string[] = [];
 
-  // Escape literal newlines for SSE compliance
-  const escaped = chunk.replace(/\n/g, '\\n');
-  streamController.enqueue(encoder.encode(`data:${escaped}\n\n`));
+  // Stream raw text chunks through data field
+  for await (const chunk of streamResult.textStream) {
+    chunks.push(chunk);
+    // Escape literal newlines for SSE compliance
+    const escaped = chunk.replace(/\n/g, '\\n');
+    streamController.enqueue(encoder.encode(`data: ${escaped}\n\n`));
+  }
 
-  return chunk;
+  return chunks.join('');
+}
+
+/**
+ * Streams a text delta as a JSON SSE event with a standard envelope.
+ * This helps frontend parsers that expect structured events.
+ */
+export function streamTextDeltaJSON(
+  controller: ReadableStreamDefaultController<Uint8Array>,
+  text: string,
+  meta: Record<string, unknown> = {},
+) {
+  const encoder = new TextEncoder();
+  const payload = { type: 'text-delta', text, ...meta };
+  controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
 }

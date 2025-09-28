@@ -1,8 +1,6 @@
-'use client';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import { CedarCopilot, ProviderConfig } from 'cedar-os';
-import { messageRenderers } from '@/cedar/messageRenderers';
+import { Providers } from './providers';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -14,27 +12,23 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+export const metadata = {
+  title: 'LayOut - Professional Floor Plan Design',
+  description: 'Professional floor plan design with AI assistance',
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const llmProvider: ProviderConfig = {
-    provider: 'mastra' as const,
-    baseURL: process.env.NEXT_PUBLIC_MASTRA_URL || 'http://localhost:4111',
-  };
-
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <CedarCopilot
-          userId={'Test User'}
-          threadId={'Test Thread'}
-          llmProvider={llmProvider}
-          messageRenderers={messageRenderers}
-        >
-          {children}
-        </CedarCopilot>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
+      >
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

@@ -1,157 +1,300 @@
 'use client';
 
-import React from 'react';
-import { z } from 'zod';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { formatDistanceToNow } from 'date-fns';
+import type { LucideIcon } from 'lucide-react';
 import {
-  useRegisterState,
-  useRegisterFrontendTool,
-  useSubscribeStateToAgentContext,
-} from 'cedar-os';
+  ArrowRight,
+  Clock,
+  FileText,
+  FolderOpen,
+  Layers,
+  Plus,
+  Users,
+  Zap,
+} from 'lucide-react';
 
-import { ChatModeSelector } from '@/components/ChatModeSelector';
-import { CedarCaptionChat } from '@/cedar/components/chatComponents/CedarCaptionChat';
-import { FloatingCedarChat } from '@/cedar/components/chatComponents/FloatingCedarChat';
-import { SidePanelCedarChat } from '@/cedar/components/chatComponents/SidePanelCedarChat';
-import { DebuggerPanel } from '@/cedar/components/debugger';
+import { Button } from '@/app/components/ui/button';
+import { Badge } from '@/app/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { useAuth } from '@/context/auth-context';
+import { supabase } from '@/lib/supabase/client';
+import type { Database } from '@/lib/supabase/types';
 
-type ChatMode = 'floating' | 'sidepanel' | 'caption';
+import type { User } from '@supabase/supabase-js';
+
+const FEATURE_CARDS = [
+  {
+    icon: Layers,
+    title: 'Precision Drawing',
+    description: 'Professional CAD-like tools with grid snapping and constraints for accurate architectural drawings.',
+  },
+  {
+    icon: Zap,
+    title: 'AI Assistant',
+    description: 'Intelligent design suggestions with natural language commands and automated layout generation.',
+  },
+  {
+    icon: Users,
+    title: 'Team Collaboration',
+    description: 'Real-time collaboration with secure sharing and role-based permissions for your team.',
+  },
+] as const;
+
+type Plan = Database['public']['Tables']['plans']['Row'];
+
+type RecentPlanState = {
+  plans: Plan[];
+  loading: boolean;
+};
 
 export default function HomePage() {
-  // Cedar-OS chat components with mode selector
-  // Choose between caption, floating, or side panel chat modes
-  const [chatMode, setChatMode] = React.useState<ChatMode>('sidepanel');
+  const { user, loading: authLoading } = useAuth();
+  const [{ plans: recentPlans, loading }, setRecentPlans] = useState<RecentPlanState>({ plans: [], loading: true });
 
-  // Cedar state for the main text that can be changed by the agent
-  const [mainText, setMainText] = React.useState('tell Cedar to change me');
+  useEffect(() => {
+    if (authLoading) return;
 
-  // Cedar state for dynamically added text lines
-  const [textLines, setTextLines] = React.useState<string[]>([]);
+    if (!user) {
+      setRecentPlans({ plans: [], loading: false });
+      return;
+    }
 
-  // Register the main text as Cedar state with a state setter
-  useRegisterState({
-    key: 'mainText',
-    description: 'The main text that can be modified by Cedar',
-    value: mainText,
-    setValue: setMainText,
-    stateSetters: {
-      changeText: {
-        name: 'changeText',
-        description: 'Change the main text to a new value',
-        argsSchema: z.object({
-          newText: z.string().min(1, 'Text cannot be empty').describe('The new text to display'),
-        }),
-        execute: (
-          currentText: string,
-          setValue: (newValue: string) => void,
-          args: { newText: string },
-        ) => {
-          setValue(args.newText);
-        },
-      },
-    },
-  });
+    let isMounted = true;
 
-  // Subscribe the main text state to the backend
-  useSubscribeStateToAgentContext('mainText', (mainText) => ({ mainText }), {
-    showInChat: true,
-    color: '#4F46E5',
-  });
+    const fetchRecentPlans = async () => {
+      setRecentPlans((prev) => ({ ...prev, loading: true }));
 
-  // Register frontend tool for adding text lines
-  useRegisterFrontendTool({
-    name: 'addNewTextLine',
-    description: 'Add a new line of text to the screen via frontend tool',
-    argsSchema: z.object({
-      text: z.string().min(1, 'Text cannot be empty').describe('The text to add to the screen'),
-      style: z
-        .enum(['normal', 'bold', 'italic', 'highlight'])
-        .optional()
-        .describe('Text style to apply'),
-    }),
-    execute: async (args: { text: string; style?: 'normal' | 'bold' | 'italic' | 'highlight' }) => {
-      const styledText =
-        args.style === 'bold'
-          ? `**${args.text}**`
-          : args.style === 'italic'
-            ? `*${args.text}*`
-            : args.style === 'highlight'
-              ? `🌟 ${args.text} 🌟`
-              : args.text;
-      setTextLines((prev) => [...prev, styledText]);
-    },
-  });
+      try {
+        const { data, error } = await supabase
+          .from('plans')
+          .select('*')
+          .or(`owner_id.eq.${user.id},id.in.(SELECT plan_id FROM plan_members WHERE user_id = '${user.id}')`)
+          .eq('is_archived', false)
+          .order('updated_at', { ascending: false })
+          .limit(5);
 
-  const renderContent = () => (
-    <div className="relative h-screen w-full">
-      <ChatModeSelector currentMode={chatMode} onModeChange={setChatMode} />
+        if (error) throw error;
 
-      {/* Main interactive content area */}
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 space-y-8">
-        {/* Big text that Cedar can change */}
-        <div className="text-center">
-          <h1 className="text-6xl font-bold text-gray-800 mb-4">{mainText}</h1>
-          <p className="text-lg text-gray-600 mb-8">
-            This text can be changed by Cedar using state setters
-          </p>
-        </div>
+        if (isMounted) {
+          setRecentPlans({ plans: data ?? [], loading: false });
+        }
+      } catch (error) {
+        console.error('Error fetching recent plans:', error);
+        if (isMounted) {
+          setRecentPlans({ plans: [], loading: false });
+        }
+      }
+    };
 
-        {/* Instructions for adding new text */}
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold text-gray-700 mb-2">
-            tell cedar to add new lines of text to the screen
-          </h2>
-          <p className="text-md text-gray-500 mb-6">
-            Cedar can add new text using frontend tools with different styles
-          </p>
-        </div>
+    fetchRecentPlans();
 
-        {/* Display dynamically added text lines */}
-        {textLines.length > 0 && (
-          <div className="w-full max-w-2xl">
-            <h3 className="text-xl font-medium text-gray-700 mb-4 text-center">Added by Cedar:</h3>
-            <div className="space-y-2">
-              {textLines.map((line, index) => (
-                <div
-                  key={index}
-                  className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center"
-                >
-                  {line.startsWith('**') && line.endsWith('**') ? (
-                    <strong className="text-blue-800">{line.slice(2, -2)}</strong>
-                  ) : line.startsWith('*') && line.endsWith('*') ? (
-                    <em className="text-blue-700">{line.slice(1, -1)}</em>
-                  ) : line.startsWith('🌟') ? (
-                    <span className="text-yellow-600 font-semibold">{line}</span>
-                  ) : (
-                    <span className="text-blue-800">{line}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+    return () => {
+      isMounted = false;
+    };
+  }, [authLoading, user]);
 
-      {chatMode === 'caption' && <CedarCaptionChat />}
-
-      {chatMode === 'floating' && (
-        <FloatingCedarChat side="right" title="Cedarling Chat" collapsedLabel="Chat with Cedar" />
-      )}
-    </div>
-  );
-
-  if (chatMode === 'sidepanel') {
+  if (authLoading) {
     return (
-      <SidePanelCedarChat
-        side="right"
-        title="Cedarling Chat"
-        collapsedLabel="Chat with Cedar"
-        showCollapsedButton={true}
-      >
-        <DebuggerPanel />
-        {renderContent()}
-      </SidePanelCedarChat>
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-2 border-b-transparent border-primary" />
+      </div>
     );
   }
 
-  return renderContent();
+  if (!user) {
+    return <MarketingLanding />;
+  }
+
+  return <Dashboard user={user} loading={loading} recentPlans={recentPlans} />;
+}
+
+function MarketingLanding() {
+  return (
+    <div className="container mx-auto px-6 py-16">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-8 text-center">
+        <div className="space-y-6">
+          <div className="flex items-center justify-center space-x-4">
+            <div className="relative">
+              <Layers className="h-20 w-20 text-primary drop-shadow-lg" />
+              <div className="absolute -inset-2 rounded-full bg-primary/5 blur-xl" />
+            </div>
+            <h1 className="text-7xl font-bold tracking-tight text-foreground">LayOut</h1>
+          </div>
+          <p className="max-w-3xl text-2xl leading-relaxed text-muted-foreground">
+            Professional floor plan editor with AI-powered design assistance. Create, collaborate, and share architectural layouts with precision.
+          </p>
+        </div>
+
+        <div className="grid w-full max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
+          {FEATURE_CARDS.map(({ icon: Icon, title, description }) => (
+            <Card key={title} className="feature-card">
+              <CardHeader className="pb-4 text-center">
+                <div className="relative mx-auto mb-6 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5">
+                  <div className="blueprint-grid absolute inset-0" />
+                  <Icon className="relative z-10 h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-xl font-semibold">{title}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <p className="leading-relaxed text-muted-foreground">{description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Button size="lg" asChild className="bg-primary hover:bg-primary/90">
+            <Link href="/auth" className="flex items-center gap-2">
+              <span>Get Started</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface DashboardProps {
+  user: User;
+  recentPlans: Plan[];
+  loading: boolean;
+}
+
+function Dashboard({ user, recentPlans, loading }: DashboardProps) {
+  return (
+    <div className="container mx-auto px-6 py-8">
+      <div className="flex flex-col space-y-8">
+        <div className="grid gap-8 md:grid-cols-3">
+          <QuickActionCard
+            href="/plans"
+            icon={Plus}
+            title="Create New Plan"
+            description="Start a fresh architectural project"
+          />
+          <QuickActionCard
+            href="/plans"
+            icon={FolderOpen}
+            title="Browse Plans"
+            description="View all your design projects"
+          />
+          <QuickActionCard
+            href="/plans?tab=shared"
+            icon={Users}
+            title="Shared with Me"
+            description="Collaborative team projects"
+          />
+        </div>
+
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold text-foreground">Recent Plans</h2>
+            <Button variant="ghost" asChild>
+              <Link href="/plans" className="flex items-center space-x-2">
+                <span>View All</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[...Array(3)].map((_, i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardHeader>
+                    <div className="mb-2 h-4 w-3/4 rounded bg-muted" />
+                    <div className="h-3 w-1/2 rounded bg-muted" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="mb-2 h-3 w-full rounded bg-muted" />
+                    <div className="h-3 w-2/3 rounded bg-muted" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : recentPlans.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {recentPlans.map((plan) => (
+                <Card key={plan.id} className="wall-card group cursor-pointer">
+                  <Link href={`/plans/${plan.id}/editor`} className="block">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="mb-2 text-lg font-semibold transition-colors group-hover:text-primary">
+                            {plan.title}
+                          </CardTitle>
+                          <CardDescription className="flex items-center space-x-2">
+                            <Clock className="h-3 w-3" />
+                            <span>
+                              Updated{' '}
+                              {plan.updated_at
+                                ? formatDistanceToNow(new Date(plan.updated_at), { addSuffix: true })
+                                : 'Never'}
+                            </span>
+                          </CardDescription>
+                        </div>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                          <FileText className="h-5 w-5 text-primary" />
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between">
+                        <Badge variant={plan.owner_id === user.id ? 'default' : 'secondary'} className="shadow-sm">
+                          {plan.owner_id === user.id ? 'Owner' : 'Shared'}
+                        </Badge>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
+                      </div>
+                    </CardContent>
+                  </Link>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="py-12 text-center">
+              <CardContent>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                  <FileText className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="mb-2 text-lg font-medium">No plans yet</h3>
+                <p className="mb-4 text-muted-foreground">Create your first floor plan to get started</p>
+                <Button asChild>
+                  <Link href="/plans">Create Plan</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
+
+interface QuickActionCardProps {
+  href: string;
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}
+
+function QuickActionCard({ href, icon: Icon, title, description }: QuickActionCardProps) {
+  return (
+    <Card className="wall-card group cursor-pointer">
+      <Link href={href} className="block p-6">
+        <div className="flex items-center space-x-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg">
+            <Icon className="h-7 w-7 text-white" />
+          </div>
+          <div className="flex-1">
+            <CardTitle className="mb-1 text-xl font-semibold transition-colors group-hover:text-primary">
+              {title}
+            </CardTitle>
+            <CardDescription className="text-muted-foreground">{description}</CardDescription>
+          </div>
+        </div>
+      </Link>
+    </Card>
+  );
 }
