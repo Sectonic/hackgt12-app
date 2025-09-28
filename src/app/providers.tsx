@@ -8,31 +8,34 @@ import { CedarCopilot } from 'cedar-os';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { useSupabaseUser } from '@/hooks/useSupabaseUser';
+import { AuthContext } from '@/context/auth-context';
 
 const queryClient = new QueryClient();
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const { user } = useSupabaseUser();
+  const { user, loading } = useSupabaseUser();
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <CedarCopilot
-          llmProvider={{
-            provider: 'mastra',
-            baseURL: '',
-            chatPath: '/api/chat',
-            resumePath: '/api/chat/resume',
-            apiKey: process.env.NEXT_PUBLIC_MASTRA_API_KEY || 'not-required',
-          }}
-        >
-          <Toaster />
-          <Sonner />
-          <div className="min-h-screen bg-background">
-            <Header user={user} />
-            {children}
-          </div>
-        </CedarCopilot>
+        <AuthContext.Provider value={{ user, loading }}>
+          <CedarCopilot
+            llmProvider={{
+              provider: 'mastra',
+              baseURL: '',
+              chatPath: '/api/chat',
+              resumePath: '/api/chat/resume',
+              apiKey: process.env.NEXT_PUBLIC_MASTRA_API_KEY || 'not-required',
+            }}
+          >
+            <Toaster />
+            <Sonner />
+            <div className="min-h-screen bg-background">
+              <Header user={user} />
+              {children}
+            </div>
+          </CedarCopilot>
+        </AuthContext.Provider>
       </TooltipProvider>
     </QueryClientProvider>
   );

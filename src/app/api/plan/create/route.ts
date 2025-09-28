@@ -4,8 +4,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     // Forward the request to the Mastra backend plan creation endpoint
-    const mastraUrl = process.env.NEXT_PUBLIC_MASTRA_URL || 'http://localhost:4111
-    ';
+    const mastraUrl = process.env.NEXT_PUBLIC_MASTRA_URL || 'http://localhost:4111';
     const endpointUrl = new URL('/plan/create', mastraUrl).toString();
     const response = await fetch(endpointUrl, {
       method: 'POST',

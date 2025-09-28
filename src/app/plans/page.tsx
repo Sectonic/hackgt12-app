@@ -63,6 +63,7 @@ export default function PlansPage() {
 
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+
   const setShowChat = useCedarStore((state) => state.setShowChat);
 
   const [activeTab, setActiveTab] = useState<TabValue>(initialTab);

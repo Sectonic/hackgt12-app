@@ -49,6 +49,7 @@ import {
 } from '@/utils/roomBuilder';
 import KonvaCanvas from '@/components/KonvaCanvas';
 import SelectedItemsPreview from '@/components/SelectedItemsPreview';
+import { MinimalisticCedarCaptionChat } from '@/components/MinimalisticCedarCaptionChat';
 import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/app/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
@@ -1259,6 +1260,13 @@ export default function Editor({ planId, items }: EditorProps) {
           onMouseUp={handleStageMouseUp}
           onClick={handleStageClick}
           onContextMenu={handleStageRightClick}
+        />
+        
+        {/* Minimalistic Cedar Caption Chat */}
+        <MinimalisticCedarCaptionChat 
+          stream={true}
+          width={380}
+          className="z-40"
         />
     </>
   );
