@@ -1,6 +1,7 @@
 import React from 'react';
 import { createMessageRenderer, CustomMessage } from 'cedar-os';
 import { ShimmerText } from './components/text/ShimmerText';
+import { floorPlanMessageRenderers } from './components/messageRenderers';
 
 // Define custom message types for tool events
 type ToolCallMessage = CustomMessage<
@@ -53,4 +54,8 @@ export const ToolResultRenderer = createMessageRenderer<ToolResultMessage>({
 });
 
 // Export all renderers for easy registration
-export const messageRenderers = [ToolCallRenderer, ToolResultRenderer];
+export const messageRenderers = [
+  ToolCallRenderer,
+  ToolResultRenderer,
+  ...floorPlanMessageRenderers,
+];

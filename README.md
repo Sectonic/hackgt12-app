@@ -58,7 +58,7 @@ npm run dev
 This runs both the Next.js frontend and Mastra backend concurrently:
 
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:4112
+- Backend API: http://localhost:4111
 
 ## Project Architecture
 
