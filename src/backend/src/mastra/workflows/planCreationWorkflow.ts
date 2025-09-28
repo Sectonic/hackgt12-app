@@ -73,27 +73,53 @@ const PlanMetadataSchema = z
   })
   .partial();
 
-const RequirementsStepOutputSchema = PlanWorkflowInputSchema.extend({
-  requirementStatus: z.enum(['complete', 'collecting']).default('complete'),
-  missingFields: z.array(z.string()).optional(),
-});
+const RequirementStatusSchema = z.enum(['collecting', 'complete']);
 
-type RequirementsStepOutput = z.infer<typeof RequirementsStepOutputSchema>;
+type RequirementStatus = z.infer<typeof RequirementStatusSchema>;
 
-const PlanGenerationStepOutputSchema = RequirementsStepOutputSchema.extend({
-  content: z.string(),
+type CanvasInstruction = {
+  step: number;
+  taskId: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  category: 'measurement' | 'design' | 'documentation' | 'review';
+};
+
+const RequirementStateSchema = PlanWorkflowInputSchema.extend({
+  requirementStatus: RequirementStatusSchema,
+  pendingQuestions: z.array(z.string()).default([]),
+  missingFields: z.array(z.string()).default([]),
+  content: z.string().optional(),
   usage: z.any().optional(),
   structuredPlan: StructuredPlanSchema,
   structuredPlanEmitted: z.boolean().optional(),
+  canvasInstructions: z
+    .object({
+      steps: z.array(
+        z.object({
+          step: z.number(),
+          taskId: z.string(),
+          description: z.string(),
+          priority: z.enum(['high', 'medium', 'low']),
+          category: z.enum(['measurement', 'design', 'documentation', 'review']),
+        }),
+      ),
+      metadata: z.object({
+        projectType: z.string().optional(),
+        roomCount: z.number().optional(),
+        specialRequirements: z.array(z.string()).optional(),
+      }),
+    })
+    .optional(),
 });
 
-type PlanGenerationStepOutput = z.infer<typeof PlanGenerationStepOutputSchema>;
+type RequirementState = z.infer<typeof RequirementStateSchema>;
 
 const gatherRequirements = createStep({
   id: 'gatherRequirements',
   description: 'Collect required base inputs from the user before planning',
   inputSchema: PlanWorkflowInputSchema,
-  outputSchema: RequirementsStepOutputSchema,
+  outputSchema: RequirementStateSchema,
   execute: async ({ inputData }) => {
     const { streamController, projectType, roomCount, specialRequirements } = inputData;
 
@@ -109,7 +135,7 @@ const gatherRequirements = createStep({
     }
 
     if (missingFields.length > 0) {
-      const questions = missingFields.map(
+      const pendingQuestions = missingFields.map(
         (field) => BASE_REQUIREMENT_QUESTIONS[field as keyof typeof BASE_REQUIREMENT_QUESTIONS],
       );
 
@@ -118,36 +144,48 @@ const gatherRequirements = createStep({
           type: 'requirements-query',
           payload: {
             missingFields,
-            questions,
+            questions: pendingQuestions,
           },
         });
         streamJSONEvent(streamController, {
           type: 'text-delta',
           text: `I still need a few details before I can begin:
-${questions.map((question, idx) => `${idx + 1}. ${question}`).join('\n')}`,
+${pendingQuestions.map((question, idx) => `${idx + 1}. ${question}`).join('\n')}`,
         });
       }
 
       return {
         ...inputData,
-        requirementStatus: 'collecting' as const,
+        requirementStatus: 'collecting' as RequirementStatus,
+        pendingQuestions,
         missingFields,
-      } satisfies RequirementsStepOutput;
+        structuredPlan: undefined,
+        structuredPlanEmitted: false,
+        content: undefined,
+        usage: undefined,
+        canvasInstructions: undefined,
+      } satisfies RequirementState;
     }
 
     return {
       ...inputData,
-      requirementStatus: 'complete' as const,
+      requirementStatus: 'complete' as RequirementStatus,
+      pendingQuestions: [],
       missingFields: [],
-    } satisfies RequirementsStepOutput;
+      structuredPlan: undefined,
+      structuredPlanEmitted: false,
+      content: undefined,
+      usage: undefined,
+      canvasInstructions: undefined,
+    } satisfies RequirementState;
   },
 });
 
 const generatePlanStructure = createStep({
   id: 'generatePlanStructure',
-  description: 'Gather responses into a structured plan and task list',
-  inputSchema: RequirementsStepOutputSchema,
-  outputSchema: PlanGenerationStepOutputSchema,
+  description: 'Use GPT-5 to create the plan summary and structured todo list',
+  inputSchema: RequirementStateSchema,
+  outputSchema: RequirementStateSchema,
   execute: async ({ inputData }) => {
     const {
       requirementStatus,
@@ -166,22 +204,24 @@ const generatePlanStructure = createStep({
     } = inputData;
 
     if (requirementStatus !== 'complete') {
-      const reminder =
-        missingFields && missingFields.length > 0
-          ? `I need a bit more information: ${missingFields.join(', ')}.`
-          : 'I still need a bit more information before we can create the floor plan.';
+      const reminder = missingFields.length
+        ? `I still need a bit more information: ${missingFields.join(', ')}.`
+        : 'I still need a bit more information before we can create the floor plan.';
 
       if (streamController) {
-        streamJSONEvent(streamController, { type: 'text-delta', text: reminder });
+        streamJSONEvent(streamController, {
+          type: 'text-delta',
+          text: reminder,
+        });
       }
 
       return {
         ...inputData,
         content: reminder,
-        usage: inputData.usage,
-        structuredPlan: inputData.structuredPlan,
-        structuredPlanEmitted: inputData.structuredPlanEmitted,
-      } satisfies PlanGenerationStepOutput;
+        structuredPlan: undefined,
+        structuredPlanEmitted: false,
+        canvasInstructions: undefined,
+      } satisfies RequirementState;
     }
 
     const messages = [
@@ -250,22 +290,24 @@ const generatePlanStructure = createStep({
       }
     };
 
-    if (!streamController) {
-      const result = await agentCreatePlan.generate(messages, generationOptions);
+    const streamResult = streamController
+      ? await agentCreatePlan.streamVNext(messages, generationOptions)
+      : null;
+
+    if (!streamResult) {
+      const result = await agentCreatePlan.generateVNext(messages, generationOptions);
       const structuredPlan = extractStructuredPlan(result.text) ?? fallbackPlan;
 
       return {
         ...inputData,
-        requirementStatus: 'complete' as const,
-        missingFields: [],
         content: result.text,
         usage: result.usage,
         structuredPlan,
         structuredPlanEmitted: false,
-      } satisfies PlanGenerationStepOutput;
+        canvasInstructions: undefined,
+      } satisfies RequirementState;
     }
 
-    const streamResult = await agentCreatePlan.streamVNext(messages, generationOptions);
     let responseText = '';
     let structuredPlanEmitted = false;
     let latestStructuredPlan:
@@ -309,149 +351,95 @@ const generatePlanStructure = createStep({
 
     return {
       ...inputData,
-      requirementStatus: 'complete' as const,
-      missingFields: [],
       content: responseText,
       usage,
       structuredPlan,
       structuredPlanEmitted,
-    } satisfies PlanGenerationStepOutput;
+      canvasInstructions: undefined,
+    } satisfies RequirementState;
   },
 });
 
-const applyPlanToCanvas = createStep({
-  id: 'applyPlanToCanvas',
-  description: 'Translate plan tasks into concrete floor plan tool calls',
-  inputSchema: PlanGenerationStepOutputSchema,
+const buildCanvasInstructions = createStep({
+  id: 'buildCanvasInstructions',
+  description: 'Convert the structured plan into ordered canvas instruction JSON',
+  inputSchema: RequirementStateSchema,
   outputSchema: PlanWorkflowOutputSchema,
   execute: async ({ inputData }) => {
     const {
       requirementStatus,
+      missingFields,
+      streamController,
       structuredPlan,
       structuredPlanEmitted = false,
-      streamController,
       content,
       usage,
-      temperature,
-      maxTokens,
-      additionalContext,
-      resourceId,
-      threadId,
-      prompt,
       projectType,
+      roomCount,
       specialRequirements,
     } = inputData;
 
-    let finalContent = content;
-    let finalUsage = usage;
-    let finalStructuredPlanEmitted = structuredPlanEmitted;
+    if (requirementStatus !== 'complete') {
+      const reminder = missingFields.length
+        ? `I still need a bit more information: ${missingFields.join(', ')}.`
+        : 'I still need a bit more information before we can create the floor plan.';
 
-    if (requirementStatus !== 'complete' || !structuredPlan) {
       return {
-        content: finalContent,
-        usage: finalUsage,
-        structuredPlan,
-        structuredPlanEmitted: finalStructuredPlanEmitted,
+        content: reminder,
+        usage,
+        structuredPlan: undefined,
+        structuredPlanEmitted: false,
       } satisfies PlanWorkflowOutput;
     }
 
-    if (!streamController || !structuredPlan.todoList || structuredPlan.todoList.length === 0) {
+    if (!structuredPlan || !structuredPlan.todoList || structuredPlan.todoList.length === 0) {
+      const message =
+        content && content.trim().length > 0
+          ? content
+          : 'I was not able to extract a structured plan yet. Please provide more detail.';
+
       return {
-        content: finalContent,
-        usage: finalUsage,
+        content: message,
+        usage,
         structuredPlan,
-        structuredPlanEmitted: finalStructuredPlanEmitted,
+        structuredPlanEmitted: false,
       } satisfies PlanWorkflowOutput;
     }
 
-    try {
+    const steps: CanvasInstruction[] = structuredPlan.todoList.map((item, index) => ({
+      step: index + 1,
+      taskId: item.id,
+      description: item.description,
+      priority: item.priority ?? 'medium',
+      category: item.category ?? 'design',
+    }));
+
+    const instructionsPayload = {
+      steps,
+      metadata: {
+        projectType: structuredPlan.projectType ?? projectType,
+        roomCount: structuredPlan.roomCount ?? roomCount,
+        specialRequirements: structuredPlan.specialRequirements ?? specialRequirements ?? [],
+      },
+    };
+
+    if (streamController) {
       streamJSONEvent(streamController, {
-        type: 'progress_update',
-        state: 'in_progress',
-        text: 'Creating an initial layout on the canvas…',
+        type: 'plan-canvas-steps',
+        payload: instructionsPayload,
       });
-
-      const toolMessages = [
-        'Existing plan overview: ' + finalContent,
-        'Structured plan JSON: ' + JSON.stringify(structuredPlan),
-        'Original prompt: ' + prompt,
-        ...(projectType ? [`Project type: ${projectType}`] : []),
-        ...(specialRequirements && specialRequirements.length
-          ? [`Special requirements: ${specialRequirements.join(', ')}`]
-          : []),
-      ];
-
-      const toolInstructions = `You are preparing a starter layout for a floor plan editor. You have access to these interactive tools: addWall, addRoom, addObject, updateWall, updateRoom, updateObject, deleteWall, deleteRoom, deleteObject, setTool, setViewport.
-
-Follow this workflow:
-1. Review the structured plan tasks and decide which tools to call first.
-2. If you are missing critical dimensions or positions, ask the user for that information using short text messages before calling a tool.
-3. Emit actual tool calls as soon as you have enough detail. Keep tool arguments simple and default friendly (e.g. start with basic rectangles or reference points around the origin).
-4. Provide concise narration as text so the user understands what you are doing.
-5. Once you have placed a basic layout, stop calling tools and summarize the next manual steps the user might take.`;
-
-      const runtimeContext = new RuntimeContext();
-      runtimeContext.set('streamController', streamController);
-      runtimeContext.set('planTodoList', structuredPlan.todoList ?? []);
-      runtimeContext.set('additionalContext', additionalContext);
-
-      const toolStream = await agentCreatePlan.streamVNext(toolMessages, {
-        instructions: toolInstructions,
-        runtimeContext,
-        tools: ALL_TOOLS,
-        modelSettings: {
-          temperature: temperature ?? 0.2,
-          maxOutputTokens: maxTokens,
-        },
-        ...(threadId && resourceId
-          ? {
-              memory: {
-                thread: threadId,
-                resource: resourceId,
-              },
-            }
-          : {}),
-      });
-
-      for await (const chunk of toolStream.fullStream) {
-        if (chunk.type === 'text-delta') {
-          streamJSONEvent(streamController, {
-            type: 'text-delta',
-            text: chunk.payload.text,
-          });
-          finalContent += chunk.payload.text;
-        } else if (chunk.type === 'tool-call' || chunk.type === 'tool-result') {
-          streamJSONEvent(streamController, chunk);
-        }
-      }
-
-      const toolUsage = await toolStream.usage;
-      if (toolUsage) {
-        finalUsage = { ...(finalUsage ?? {}), toolApplication: toolUsage };
-      }
-
-      finalStructuredPlanEmitted = true;
-      streamJSONEvent(streamController, {
-        type: 'progress_update',
-        state: 'complete',
-        text: 'Initial layout created. Let me know if you would like refinements!',
-      });
-    } catch (error) {
-      console.error('Plan application error:', error);
-      if (streamController) {
-        streamJSONEvent(streamController, {
-          type: 'progress_update',
-          state: 'error',
-          text: 'I ran into an issue while applying the plan. Could you provide a bit more detail?',
-        });
-      }
     }
+
+    const summary =
+      content && content.length > 0
+        ? content
+        : 'I prepared the plan steps you can execute on the canvas. Let me know if you need adjustments.';
 
     return {
-      content: finalContent,
-      usage: finalUsage,
+      content: summary,
+      usage,
       structuredPlan,
-      structuredPlanEmitted: finalStructuredPlanEmitted,
+      structuredPlanEmitted: structuredPlanEmitted || true,
     } satisfies PlanWorkflowOutput;
   },
 });
@@ -459,11 +447,11 @@ Follow this workflow:
 export const planCreationWorkflow = createWorkflow({
   id: 'planCreationWorkflow',
   description:
-    'Collects requirements, generates a structured plan, and applies the plan to the canvas using interactive tools.',
+    'Collects requirements, generates a structured plan, and emits ordered canvas instructions without executing tools directly.',
   inputSchema: PlanWorkflowInputSchema,
   outputSchema: PlanWorkflowOutputSchema,
 })
   .then(gatherRequirements)
   .then(generatePlanStructure)
-  .then(applyPlanToCanvas)
+  .then(buildCanvasInstructions)
   .commit();
