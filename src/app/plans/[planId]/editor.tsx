@@ -49,10 +49,11 @@ import {
 } from '@/utils/roomBuilder';
 import KonvaCanvas from '@/components/KonvaCanvas';
 import SelectedItemsPreview from '@/components/SelectedItemsPreview';
-import { MinimalisticCedarCaptionChat } from '@/components/MinimalisticCedarCaptionChat';
+import { CedarCaptionChat } from '@/cedar/components/chatComponents/CedarCaptionChat';
 import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/app/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
+import { useFloorPlanChat } from '@/hooks/useFloorPlanChat';
 import type { Database, Json } from '@/lib/supabase/types';
 
 const cloneSnapshot = (snapshot: PlanSnapshot): PlanSnapshot =>
@@ -152,6 +153,186 @@ export default function Editor({ planId, items }: EditorProps) {
     options: { maxHistorySize: 50 }
   });
   const { addToHistory, resetHistory } = historyManager;
+
+  useEffect(() => {
+    console.log('Placed entities:', placedEntities);
+    console.log('Room definitions:', roomDefinitions);
+  }, [placedEntities, roomDefinitions]);
+
+  // Floor plan chat integration
+  const handleFloorPlanUpdate = useCallback((data: {
+    roomDefinitions: RoomDefinition[];
+    placedEntities: PlacedEntity[];
+  }) => {
+    try {
+      // Apply the floor plan data to the current state
+      const normalizedRoomDefinitions = data.roomDefinitions.length > 0
+        ? data.roomDefinitions
+        : createInitialRoomDefinitions();
+      
+      const normalizedEntities = assignEntitiesToRooms(data.placedEntities, normalizedRoomDefinitions);
+
+      // Update state with new floor plan
+      setRoomDefinitions(normalizedRoomDefinitions);
+      addToHistory(normalizedEntities);
+
+      toast({
+        title: 'Floor plan generated!',
+        description: `Created ${normalizedRoomDefinitions.length - 1} rooms with ${normalizedEntities.length} elements.`,
+      });
+    } catch (error) {
+      console.error('Error applying floor plan update:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error applying floor plan',
+        description: 'Failed to apply the generated floor plan. Please try again.',
+      });
+    }
+  }, [addToHistory, toast]);
+
+  const handleFloorPlanError = useCallback((error: string) => {
+    toast({
+      variant: 'destructive',
+      title: 'Floor plan generation failed',
+      description: error,
+    });
+  }, [toast]);
+
+  // State for tracking submission progress
+  const [submitted, setSubmitted] = useState(false);
+  const [currentPhase, setCurrentPhase] = useState<string>('');
+
+  // Custom handleSubmit function for floor plan chat
+  const handleFloorPlanSubmit = useCallback((message: string, data?: any) => {
+    console.log('Floor plan chat submit:', { message, data });
+    
+    // Reset submitted state and phase
+    setSubmitted(false);
+    setCurrentPhase('Starting floor plan generation...');
+    
+    // Import the default data
+    import('@/app/plans/[planId]/default').then(({ placedEntities: defaultEntities, roomDefinitions: defaultRooms }) => {
+      // Clear existing data first
+      setPlacedEntities([]);
+      setRoomDefinitions([]);
+      
+      // Start the fake streaming process
+      let currentIndex = 0;
+      const delay = 250; // 250ms between updates
+      const intervals: NodeJS.Timeout[] = []; // Track intervals for cleanup
+      
+      // Helper function to create interval with cleanup tracking
+      const createInterval = (callback: () => void, delay: number) => {
+        const interval = setInterval(callback, delay);
+        intervals.push(interval);
+        return interval;
+      };
+      
+      // Process rooms first
+      const processRooms = () => {
+        setCurrentPhase('Creating rooms...');
+        const roomInterval = createInterval(() => {
+          if (currentIndex < defaultRooms.length) {
+            const room = defaultRooms[currentIndex] as RoomDefinition;
+            setRoomDefinitions(prev => [...prev, room]);
+            currentIndex++;
+          } else {
+            clearInterval(roomInterval);
+            currentIndex = 0;
+            // Start processing walls
+            processWalls();
+          }
+        }, delay);
+      };
+      
+      // Process walls
+      const processWalls = () => {
+        setCurrentPhase('Building walls...');
+        const wallEntities = defaultEntities.filter(entity => entity.type === 'wall');
+        const wallInterval = createInterval(() => {
+          if (currentIndex < wallEntities.length) {
+            const wall = wallEntities[currentIndex] as PlacedEntity;
+            setPlacedEntities(prev => [...prev, wall]);
+            currentIndex++;
+          } else {
+            clearInterval(wallInterval);
+            currentIndex = 0;
+            // Start processing doors
+            processDoors();
+          }
+        }, delay);
+      };
+      
+      // Process doors
+      const processDoors = () => {
+        setCurrentPhase('Adding doors...');
+        const doorEntities = defaultEntities.filter(entity => 
+          entity.type === 'foundational' && entity.subtype === 'door'
+        );
+        const doorInterval = createInterval(() => {
+          if (currentIndex < doorEntities.length) {
+            const door = doorEntities[currentIndex] as PlacedEntity;
+            setPlacedEntities(prev => [...prev, door]);
+            currentIndex++;
+          } else {
+            clearInterval(doorInterval);
+            currentIndex = 0;
+            // Start processing windows
+            processWindows();
+          }
+        }, delay);
+      };
+      
+      // Process windows
+      const processWindows = () => {
+        setCurrentPhase('Installing windows...');
+        const windowEntities = defaultEntities.filter(entity => 
+          entity.type === 'foundational' && entity.subtype === 'window'
+        );
+        const windowInterval = createInterval(() => {
+          if (currentIndex < windowEntities.length) {
+            const window = windowEntities[currentIndex] as PlacedEntity;
+            setPlacedEntities(prev => [...prev, window]);
+            currentIndex++;
+          } else {
+            clearInterval(windowInterval);
+            currentIndex = 0;
+            // Start processing objects
+            processObjects();
+          }
+        }, delay);
+      };
+      
+      // Process objects (furniture)
+      const processObjects = () => {
+        setCurrentPhase('Placing furniture...');
+        const objectEntities = defaultEntities.filter(entity => 
+          entity.type === 'furniture' || (entity.type === 'foundational' && !entity.subtype)
+        );
+        const objectInterval = createInterval(() => {
+          if (currentIndex < objectEntities.length) {
+            const object = objectEntities[currentIndex] as PlacedEntity;
+            setPlacedEntities(prev => [...prev, object]);
+            currentIndex++;
+          } else {
+            clearInterval(objectInterval);
+            // All done! Set submitted to true
+            setSubmitted(true);
+            setCurrentPhase('Floor plan generation complete!');
+            console.log('Floor plan generation complete!');
+          }
+        }, delay);
+      };
+      
+      // Start the process with rooms
+      processRooms();
+      
+      // Return cleanup function
+      return () => {
+        intervals.forEach(interval => clearInterval(interval));
+      };
+    });
+  }, [planId, roomDefinitions.length, placedEntities.length]);
 
   const applySnapshot = useCallback(
     (snapshot: PlanSnapshot | unknown, options: { fromRemote?: boolean; revisionId?: string } = {}) => {
@@ -1262,11 +1443,15 @@ export default function Editor({ planId, items }: EditorProps) {
           onContextMenu={handleStageRightClick}
         />
         
-        {/* Minimalistic Cedar Caption Chat */}
-        <MinimalisticCedarCaptionChat 
-          stream={true}
-          width={380}
+        {/* Cedar Caption Chat for Floor Plan Processing */}
+        <CedarCaptionChat 
+          stream={false}
+          dimensions={{ width: 480, maxWidth: 600 }}
           className="z-40"
+          showThinking={true}
+          onSubmit={handleFloorPlanSubmit}
+          currentPhase={currentPhase}
+          submitted={submitted}
         />
     </>
   );

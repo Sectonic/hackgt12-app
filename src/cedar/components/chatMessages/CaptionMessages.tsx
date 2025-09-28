@@ -19,10 +19,14 @@ import { TypewriterText } from '@/cedar/components/text/TypewriterText';
 interface CaptionMessagesProps {
 	showThinking?: boolean;
 	className?: string;
+	currentPhase?: string;
+	submitted?: boolean;
 }
 
 const CaptionMessages: React.FC<CaptionMessagesProps> = ({
 	className = '',
+	currentPhase,
+	submitted,
 }) => {
 	const { messages } = useMessages();
 
@@ -69,12 +73,47 @@ const CaptionMessages: React.FC<CaptionMessagesProps> = ({
 		);
 	}
 
+	if (currentPhase) {
+		const phaseText = submitted ? 'Floor plan generation complete!' : currentPhase;
+		return (
+			<div className={containerClasses}>
+				<div className={`font-semibold`}>
+					<span style={{ color: styling.accentColor }}>Cedar: </span>
+					<TypewriterText
+						text={phaseText}
+						className='break-words'
+						renderAsMarkdown={false}
+					/>
+				</div>
+			</div>
+		);
+	}
+
 	if (!latestMessage) return null;
 
 	// Render based on message type
 	switch (latestMessage.type) {
 		case 'text':
 			const textSizeClass = getTextSizeClass(latestMessage.content);
+			
+			// If we have a current phase, show that instead of the message content
+			if (currentPhase) {
+				const phaseText = submitted ? 'Floor plan generation complete!' : currentPhase;
+				return (
+					<div className={containerClasses}>
+						<div className={`font-semibold ${textSizeClass}`}>
+							<span style={{ color: styling.accentColor }}>Cedar: </span>
+							<TypewriterText
+								text={phaseText}
+								className='break-words'
+								renderAsMarkdown={false}
+							/>
+						</div>
+					</div>
+				);
+			}
+			
+			// Default behavior when no phase is active
 			return (
 				<div className={containerClasses}>
 					<div className={`font-semibold ${textSizeClass}`}>

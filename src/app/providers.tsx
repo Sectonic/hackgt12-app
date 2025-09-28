@@ -22,9 +22,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <CedarCopilot
             llmProvider={{
               provider: 'mastra',
-              baseURL: '',
-              chatPath: '/api/chat',
-              resumePath: '/api/chat/resume',
+              baseURL: process.env.NEXT_PUBLIC_MASTRA_BASE_URL || 'http://localhost:4111',
+              chatPath: '/chat',
               apiKey: process.env.NEXT_PUBLIC_MASTRA_API_KEY || 'not-required',
             }}
           >

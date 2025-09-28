@@ -24,6 +24,9 @@ interface CedarCaptionChatProps {
 	className?: string;
 	showThinking?: boolean;
 	stream?: boolean; // Whether to use streaming for responses
+	onSubmit?: (message: string, data?: any) => void; // Custom submit handler
+	currentPhase?: string; // Current processing phase
+	submitted?: boolean; // Whether processing is complete
 }
 
 export const CedarCaptionChat: React.FC<CedarCaptionChatProps> = ({
@@ -31,6 +34,9 @@ export const CedarCaptionChat: React.FC<CedarCaptionChatProps> = ({
 	className = '',
 	showThinking = true,
 	stream = true,
+	onSubmit,
+	currentPhase,
+	submitted,
 }) => {
 	// Always false since buttons do nothing
 	const hasDiffs = false;
@@ -152,10 +158,14 @@ export const CedarCaptionChat: React.FC<CedarCaptionChatProps> = ({
 
 				<Container3D className='p-2'>
 					<div className='w-full pb-3'>
-						<CaptionMessages showThinking={showThinking} />
+						<CaptionMessages 
+							showThinking={showThinking} 
+							currentPhase={currentPhase}
+							submitted={submitted}
+						/>
 					</div>
 
-					<ChatInput className='bg-transparent p-0' stream={stream} />
+					<ChatInput className='bg-transparent p-0' stream={stream} onSubmit={onSubmit} />
 				</Container3D>
 			</div>
 		</FloatingContainer>

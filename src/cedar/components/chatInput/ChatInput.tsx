@@ -24,10 +24,11 @@ export const ChatInput: React.FC<{
   isInputFocused?: boolean;
   className?: string; // Additional classes for the container
   stream?: boolean; // Whether to use streaming for responses
-}> = ({ handleFocus, handleBlur, isInputFocused, className = '', stream = true }) => {
+  onSubmit?: (message: string, data?: any) => void; // Custom submit handler
+}> = ({ handleFocus, handleBlur, isInputFocused, className = '', stream = true, onSubmit }) => {
   const [isFocused, setIsFocused] = React.useState(false);
 
-  const { editor, isEditorEmpty, handleSubmit } = useCedarEditor({
+  const { editor, isEditorEmpty, handleSubmit: defaultHandleSubmit, getEditorText } = useCedarEditor({
     onFocus: () => {
       setIsFocused(true);
       handleFocus?.();
@@ -38,6 +39,25 @@ export const ChatInput: React.FC<{
     },
     stream,
   });
+
+  // Create custom handleSubmit that uses onSubmit prop when provided
+  const handleSubmit = useCallback(() => {
+    if (onSubmit) {
+      const message = getEditorText();
+      if (message.trim()) {
+        // Get any additional data from the editor (mentions, context, etc.)
+        const data = {
+          // You can extract additional data here if needed
+          // For example, mentions, context, etc.
+        };
+        onSubmit(message, data);
+        editor?.commands.clearContent();
+      }
+    } else {
+      // Fall back to default handleSubmit
+      defaultHandleSubmit();
+    }
+  }, [onSubmit, defaultHandleSubmit]);
 
   // Initialize voice functionality
   const voice = useVoice();
