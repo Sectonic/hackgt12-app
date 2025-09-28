@@ -7,7 +7,7 @@ function generateDynamicPlan(prompt: string) {
   // Analyze the user's input to determine the type of project
   let projectType = 'general';
   let roomCount = 1;
-  let specialRequirements = [];
+  const specialRequirements = [];
 
   // Detect project type
   if (lowerPrompt.includes('apartment') || lowerPrompt.includes('flat')) {

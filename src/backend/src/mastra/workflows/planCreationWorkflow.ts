@@ -73,7 +73,12 @@ const callPlanCreationAgent = createStep({
     ];
 
     let responseText = '';
-    let todoList: any[] = [];
+    let todoList: Array<{
+      id: string;
+      description: string;
+      priority?: 'high' | 'medium' | 'low';
+      category?: 'measurement' | 'design' | 'documentation' | 'review';
+    }> = [];
 
     /**
      * Using Mastra streamVNext for enhanced streaming capabilities.
@@ -100,10 +105,10 @@ const callPlanCreationAgent = createStep({
 
     for await (const chunk of streamResult.fullStream) {
       if (chunk.type === 'text-delta') {
-        await handleTextStream(chunk.payload.text, streamController);
+        await handleTextStream({ textStream: async function* () { yield chunk.payload.text; }() }, streamController);
         responseText += chunk.payload.text;
       } else if (chunk.type === 'tool-result' || chunk.type === 'tool-call') {
-        streamJSONEvent(streamController, chunk.type, chunk);
+        streamJSONEvent(streamController, chunk.type);
       }
     }
 
